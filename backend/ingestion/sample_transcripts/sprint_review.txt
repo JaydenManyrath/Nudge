@@ -1,0 +1,15 @@
+[Sprint Review — Team Nudge]
+
+Jamie: Okay, let's do a quick round up. Priya, where are we on the pricing page?
+Priya: Almost done. I'll have the final copy ready by Friday, and I'll send it to Jamie for review before it goes live.
+Jamie: Perfect. That's high priority since marketing wants to launch next week.
+Sam: On my end, the checkout flow test has been flaky in CI. I haven't had time to dig into it yet.
+Jamie: Can you take a look this week? It's blocking the release pipeline.
+Sam: Yeah, I'll investigate it by Wednesday.
+Priya: Also, someone mentioned the onboarding emails are still using the old logo.
+Jamie: Good catch. Sam, can you swap those out too?
+Sam: Sure, I'll fix the logo in the onboarding email templates this week as well.
+Jamie: Great. Anything blocking anyone right now?
+Sam: Nope, all good.
+Priya: Same here.
+Jamie: Alright, let's reconvene Friday.

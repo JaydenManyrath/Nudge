@@ -1,0 +1,15 @@
+[Project Kickoff — Nudge x Acme Corp Integration]
+
+Morgan: Thanks everyone for joining. Let's talk through what we need before we can start building.
+Alex: We're going to need API documentation from Acme before anything can happen on our side.
+Morgan: Right, I don't think anyone's reached out to them yet.
+Casey: I can send that request today actually, I have their contact from the sales call.
+Morgan: Great, thanks Casey.
+Alex: Someone should also put together a rough architecture diagram so we're aligned before we start coding.
+Morgan: Good idea. No rush on that one, just before our next sync.
+Casey: I think that's more Alex's area than mine.
+Alex: Yeah, I can sketch something out.
+Morgan: Cool. Anything else blocking us?
+Alex: Not that I can think of.
+Casey: All good here too.
+Morgan: Great, let's regroup next week.

@@ -1,0 +1,9 @@
+[Daily Standup]
+
+Riley: Morning everyone, quick standup. How'd yesterday go?
+Taylor: Pretty smooth, finished up the dashboard styling I was working on.
+Jordan: Same, nothing new to report, just continuing on the API refactor.
+Riley: Nice, no blockers on my end either. I think we're in good shape for the demo.
+Taylor: Agreed, feels like a light day.
+Jordan: Yeah, nothing urgent from me.
+Riley: Cool, short one today then. Talk tomorrow.
