@@ -1,11 +1,11 @@
 # Nudge
 
-Nudge turns Zoom meeting transcripts into tracked, assigned tasks. It pulls a transcript from Zoom, sends it to Claude for structured extraction, lets a manager review and approve what gets created, then syncs deadlines to Google Calendar and keeps everyone's dashboard up to date in real time.
+Nudge turns Zoom meeting transcripts into tracked, assigned tasks. It pulls a transcript from Zoom, sends it to OpenAI for structured extraction, lets a manager review and approve what gets created, then syncs deadlines to Google Calendar and keeps everyone's dashboard up to date in real time.
 
 ## How It Works
 
 1. **Ingest** — `zoom_client.py` authenticates with Zoom (OAuth) and fetches a meeting transcript, or a sample transcript is loaded locally for dev/demo.
-2. **Extract** — the transcript is sent to Claude, which returns structured task candidates (owner, description, due date) following the contract in `docs/task_schema.md`.
+2. **Extract** — the transcript is sent to OpenAI, which returns structured task candidates (owner, description, due date) following the contract in `docs/task_schema.md`.
 3. **Review** — a manager reviews extracted tasks on the review screen and approves, edits, or rejects each one.
 4. **Sync** — approved tasks are written to the database and pushed to Google Calendar (OAuth) as events with deadlines.
 5. **Track** — manager and employee dashboards show task status, with real-time updates over WebSockets and threaded comments on individual tasks.
@@ -13,7 +13,7 @@ Nudge turns Zoom meeting transcripts into tracked, assigned tasks. It pulls a tr
 ## Stack
 
 - **Backend:** Flask, SQLAlchemy, SQLite
-- **AI:** Claude API (key-based, no OAuth)
+- **AI:** OpenAI API (key-based, no OAuth)
 - **Integrations:** Zoom API (OAuth), Google Calendar API (OAuth)
 - **Frontend:** Jinja templates, vanilla CSS/JS, WebSockets for realtime
 - **Deployment:** Docker, Render (`render.yaml`)
@@ -29,7 +29,7 @@ nudge/
 │   ├── config.py
 │   ├── models/                 # SQLAlchemy models: user, meeting, task, comment
 │   ├── ingestion/               # Zoom OAuth + transcript fetch/loading
-│   ├── ai/                      # Claude client, prompts, schema, parsing
+│   ├── ai/                      # OpenAI client, prompts, schema, parsing
 │   ├── calendar_integration/    # Google OAuth flow + calendar sync
 │   ├── routes/                  # auth, meetings, tasks, comments
 │   ├── realtime/                # WebSocket events
@@ -38,7 +38,7 @@ nudge/
 │   ├── templates/                # base, manager review, manager/employee dashboards
 │   └── static/                   # css, js (task cards, comment threads, sockets)
 └── docs/
-    ├── task_schema.md            # Claude output ↔ DB contract
+    ├── task_schema.md            # OpenAI output ↔ DB contract
     ├── system_diagram.png
     ├── wireframe.png
     ├── standup_notes.md
@@ -50,11 +50,11 @@ nudge/
 ```bash
 git clone <repo-url>
 cd nudge
-cp .env.example .env        # fill in Zoom, Claude, Google Calendar keys/secrets
+cp .env.example .env        # fill in Zoom, OpenAI, Google Calendar keys/secrets
 docker-compose up           # local dev: Flask + SQLite
 ```
 
-Required env vars (see `.env.example`): Zoom OAuth client ID/secret, Claude API key, Google Calendar OAuth client ID/secret.
+Required env vars (see `.env.example`): Zoom OAuth client ID/secret, OpenAI API key, Google Calendar OAuth client ID/secret.
 
 Production deploys via `Dockerfile` + `render.yaml` on Render.
 
@@ -65,7 +65,7 @@ Two OAuth-authorized integrations:
 - **Zoom** — authorizes transcript retrieval (`ingestion/zoom_client.py`)
 - **Google Calendar** — authorizes pushing task deadlines as events (`calendar_integration/google_client.py`)
 
-Claude API access is key-based rather than OAuth, so it sits outside the "APIs with authorization" bucket but remains the core AI differentiator for task extraction.
+OpenAI API access is key-based rather than OAuth, so it sits outside the "APIs with authorization" bucket but remains the core AI differentiator for task extraction.
 
 ## Team Ownership
 
