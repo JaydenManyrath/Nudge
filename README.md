@@ -19,6 +19,10 @@ Nudge turns Zoom meeting transcripts into tracked, assigned tasks. It pulls a tr
 - **Deployment:** Docker, Render (`render.yaml`)
 - **Local dev:** `docker-compose.yml` (Flask + SQLite volume)
 
+## Architecture
+
+![Nudge architecture: live transcript capture through manager-approved distribution](docs/architecture.svg)
+
 ## Project Structure
 
 ```
@@ -39,7 +43,7 @@ nudge/
 │   └── static/                   # css, js (task cards, comment threads, sockets)
 └── docs/
     ├── task_schema.md            # OpenAI output ↔ DB contract
-    ├── system_diagram.png
+    ├── architecture.svg          # system diagram: live capture → approval → distribution
     ├── wireframe.png
     ├── standup_notes.md
     └── sprint1_plan.md / sprint2_plan.md / sprint3_plan.md
