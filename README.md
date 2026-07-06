@@ -1,30 +1,27 @@
-Nudge
+# Nudge
 
 Nudge turns Zoom meeting transcripts into tracked, assigned tasks. It pulls a transcript from Zoom, sends it to Claude for structured extraction, lets a manager review and approve what gets created, then syncs deadlines to Google Calendar and keeps everyone's dashboard up to date in real time.
 
-How It Works
+## How It Works
 
+1. **Ingest** — `zoom_client.py` authenticates with Zoom (OAuth) and fetches a meeting transcript, or a sample transcript is loaded locally for dev/demo.
+2. **Extract** — the transcript is sent to Claude, which returns structured task candidates (owner, description, due date) following the contract in `docs/task_schema.md`.
+3. **Review** — a manager reviews extracted tasks on the review screen and approves, edits, or rejects each one.
+4. **Sync** — approved tasks are written to the database and pushed to Google Calendar (OAuth) as events with deadlines.
+5. **Track** — manager and employee dashboards show task status, with real-time updates over WebSockets and threaded comments on individual tasks.
 
-Ingest — zoom_client.py authenticates with Zoom (OAuth) and fetches a meeting transcript, or a sample transcript is loaded locally for dev/demo.
-Extract — the transcript is sent to Claude, which returns structured task candidates (owner, description, due date) following the contract in docs/task_schema.md.
-Review — a manager reviews extracted tasks on the review screen and approves, edits, or rejects each one.
-Sync — approved tasks are written to the database and pushed to Google Calendar (OAuth) as events with deadlines.
-Track — manager and employee dashboards show task status, with real-time updates over WebSockets and threaded comments on individual tasks.
+## Stack
 
+- **Backend:** Flask, SQLAlchemy, SQLite
+- **AI:** Claude API (key-based, no OAuth)
+- **Integrations:** Zoom API (OAuth), Google Calendar API (OAuth)
+- **Frontend:** Jinja templates, vanilla CSS/JS, WebSockets for realtime
+- **Deployment:** Docker, Render (`render.yaml`)
+- **Local dev:** `docker-compose.yml` (Flask + SQLite volume)
 
-Stack
+## Project Structure
 
-
-Backend: Flask, SQLAlchemy, SQLite
-AI: Claude API (key-based, no OAuth)
-Integrations: Zoom API (OAuth), Google Calendar API (OAuth)
-Frontend: Jinja templates, vanilla CSS/JS, WebSockets for realtime
-Deployment: Docker, Render (render.yaml)
-Local dev: docker-compose.yml (Flask + SQLite volume)
-
-
-Project Structure
-
+```
 nudge/
 ├── backend/
 │   ├── app.py                  # Flask app factory
@@ -46,25 +43,40 @@ nudge/
     ├── wireframe.png
     ├── standup_notes.md
     └── sprint1_plan.md / sprint2_plan.md / sprint3_plan.md
+```
 
-Setup
+## Setup
 
-bashgit clone <repo-url>
+```bash
+git clone <repo-url>
 cd nudge
 cp .env.example .env        # fill in Zoom, Claude, Google Calendar keys/secrets
 docker-compose up           # local dev: Flask + SQLite
+```
 
-Required env vars (see .env.example): Zoom OAuth client ID/secret, Claude API key, Google Calendar OAuth client ID/secret.
+Required env vars (see `.env.example`): Zoom OAuth client ID/secret, Claude API key, Google Calendar OAuth client ID/secret.
 
-Production deploys via Dockerfile + render.yaml on Render.
+Production deploys via `Dockerfile` + `render.yaml` on Render.
 
-Authentication
+## Authentication
 
 Two OAuth-authorized integrations:
 
-
-Zoom — authorizes transcript retrieval (ingestion/zoom_client.py)
-Google Calendar — authorizes pushing task deadlines as events (calendar_integration/google_client.py)
-
+- **Zoom** — authorizes transcript retrieval (`ingestion/zoom_client.py`)
+- **Google Calendar** — authorizes pushing task deadlines as events (`calendar_integration/google_client.py`)
 
 Claude API access is key-based rather than OAuth, so it sits outside the "APIs with authorization" bucket but remains the core AI differentiator for task extraction.
+
+## Team Ownership
+
+| Owner | Responsible for |
+|---|---|
+| **Dev A** | Ingestion (`ingestion/`) and AI extraction (`ai/`) |
+| **Dev B** | Models, routes, Google Calendar integration, and realtime sockets |
+| **Dev C** | Frontend — templates, CSS/JS, dashboard rendering |
+
+Tests are split across all three: `test_ai_parser.py`, `test_zoom_client.py` (Dev A), `test_calendar_sync.py`, `test_task_endpoints.py`, `test_meeting_endpoints.py` (Dev B), `test_dashboard_render.py` (Dev C).
+
+## Timeline
+
+Built over 8 working days (Fri Jul 3 – Fri Jul 10), split into 3 sprints plus a buffer/demo-prep block. See `docs/sprint1_plan.md` through `docs/sprint3_plan.md` and `docs/standup_notes.md` for details.
