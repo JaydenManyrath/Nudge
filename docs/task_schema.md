@@ -4,7 +4,9 @@ This document is the contract between `extraction.py` / `backend/ai/extraction.p
 
 Nudge uses meeting transcripts to produce a meeting summary and a list of draft tasks. These tasks are not final until a manager reviews them in `routes/review.py`.
 
-TODO: The project overview uses the word `deadline`, while the current parser contract in `backend/ai/schema.py` uses `due_date`. For now, this document treats `due_date` as the code-facing field and "deadline" as the product-facing label.
+**Note on model choice:** earlier planning docs referred to "Claude" throughout. The team decided in Sprint 1 to use OpenAI (`backend/ai/llm_client.py`) instead, since that matched the dependencies already in `requirements.txt`. This document uses "the LLM" or "OpenAI" from here on; treat any remaining "Claude" references elsewhere in the repo's docs as stale terminology from before that decision, not a second model in play.
+
+**Resolved:** `parser.py` does NOT support a backward-compatible `deadline` alias. The LLM is always prompted (via `backend/ai/prompts.py` and the strict JSON schema in `backend/ai/schema.py`) to emit `due_date` only. A payload using `deadline` instead of `due_date` is treated as malformed and rejected -- see the Malformed Example below, which is exactly this case.
 
 ## Canonical Payload Shape
 
@@ -23,7 +25,41 @@ TODO: The project overview uses the word `deadline`, while the current parser co
 }
 ```
 
-## JSON Schema
+## Reference Date (Sprint 2 addition)
+
+The LLM is not told "today's date" implicitly -- it has no way to know when the
+meeting happened unless told explicitly. Without an anchor, relative language
+like "by Friday" gets guessed, and guesses have been observed to land on the
+wrong date *and* the wrong year.
+
+`backend/ai/llm_client.call_extraction(transcript_text, reference_date=None)`
+accepts a `reference_date` (ISO 8601 string) representing when the meeting took
+place, and `backend/ai/prompts.build_user_prompt()` includes it as `Meeting date: ...`
+in the prompt sent to the LLM. If no `reference_date` is supplied, it defaults to
+today's date at call time.
+
+`backend/ai/extraction.extract_tasks(transcript_text, job_id, meeting_date=None)`
+threads this through as `meeting_date`. **Once `models.py` / `backend/models/`
+has a real `Meeting.created_at` or similar field, callers should pass that value
+in as `meeting_date`** rather than relying on the "defaults to today" fallback,
+so relative dates resolve against the actual meeting, not whenever extraction
+happens to run (which matters if a job is retried or processed hours later).
+
+## Null-Like String Normalization (Sprint 2 addition)
+
+Even with strict JSON schema mode, the LLM has been observed returning the
+*string* `"null"` for `due_date` instead of the JSON value `null`. `parser.py`'s
+`_normalize_due_date()` treats the strings `"null"`, `"none"`, `"n/a"`, `"na"`,
+`"unknown"`, and `""` (case-insensitive, whitespace-trimmed) as equivalent to
+`None`, so a literal `"null"` string can never reach the database as a fake
+deadline.
+
+Any other non-empty `due_date` string is validated against real ISO 8601 date
+parsing (`datetime.date.fromisoformat`). A value like `"next Friday"` slipping
+through as literal text is rejected with `ExtractionValidationError`, not
+silently stored -- a malformed date is treated as worse than no date.
+
+
 
 ```json
 {
@@ -104,6 +140,21 @@ TODO: The project overview uses the word `deadline`, while the current parser co
 }
 ```
 
+## Sample Transcript Coverage
+
+`backend/ingestion/sample_transcripts/` covers a deliberate spread of shapes so
+extraction can be exercised without live Zoom RTMS:
+
+| File | Edge case exercised |
+| --- | --- |
+| `sprint_review.txt` | Clear owners, concrete relative deadlines ("by Friday"), one person owning multiple tasks |
+| `project_kickoff.txt` | Ambiguous-but-eventually-claimed ownership, no explicit deadlines |
+| `standup_no_actions.txt` | No action items at all -- extraction must return an empty `tasks` list, not invent any |
+| `vague_deadline.txt` | Non-committal deadline language ("no rush," "sometime next quarter," "whenever") -- must resolve to `due_date: null`, not a guessed date |
+| `unclear_owner.txt` | A real task is raised but nobody claims it and the conversation moves on -- must resolve to `owner: "unassigned"`, not the last speaker |
+
+TODO (Sprint 3): add a sample with explicit urgency language ("ASAP," "critical") and a sample combining "has a real task" with "no deadline mentioned" as a single case, to directly back the Sprint 3 demo-data requirement (multiple owners, no owner, no deadline, urgent priority all represented).
+
 ## Malformed Example
 
 ```json
@@ -133,8 +184,6 @@ Expected validation failures:
 - `context` is missing.
 
 The parser should raise `ExtractionValidationError` with a useful message and the calling code should mark extraction as failed or requiring manual review.
-
-TODO: Decide whether `parser.py` should support a backward-compatible alias from `deadline` to `due_date`, or whether Claude should always be prompted to emit only `due_date`.
 
 ## Mapping To Database Models
 
@@ -192,5 +241,23 @@ The parser contract is covered by `backend/tests/test_ai_parser.py`.
 | `test_rejects_missing_task_field` | Every task must include required fields. |
 | `test_rejects_invalid_priority` | Priority enum is enforced. |
 | `test_rejects_empty_owner` | Owner cannot be blank. |
+| `test_normalizes_string_null_to_none` | LLM returning the string `"null"` is treated as no deadline, not stored literally. |
+| `test_normalizes_other_null_like_strings` | Same for `"none"`, `"n/a"`, and empty string. |
+| `test_rejects_non_iso_due_date` | A due_date that isn't a real ISO date (e.g. `"next Friday"`) is rejected, not stored. |
+| `test_accepts_valid_iso_due_date` | A well-formed ISO date passes through unchanged. |
 | `test_strips_whitespace_from_string_fields` | Parser normalizes strings before database use. |
+
+`backend/tests/test_transcript_loader.py` (added Sprint 2) covers the transcript
+normalization layer that both sample files and any future live/manual transcript
+text pass through:
+
+| Test | Contract behavior |
+| --- | --- |
+| `test_lists_all_sample_transcripts` | Sample directory is discoverable. |
+| `test_loads_a_known_sample_transcript` | A named sample loads correctly. |
+| `test_missing_sample_raises_with_available_list` | Bad filename fails loudly, not silently. |
+| `test_normalizes_windows_line_endings` | CRLF input (e.g. from browser paste) is normalized to `\n`. |
+| `test_collapses_runs_of_blank_lines` | Long blank-line runs (e.g. from dropped RTMS chunks) don't bloat the transcript. |
+| `test_strips_leading_and_trailing_whitespace` | Consistent trimming regardless of source. |
+| `test_empty_input_returns_empty_string` | Empty/`None` input doesn't crash the loader. |
 

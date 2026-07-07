@@ -1,0 +1,20 @@
+# Owner: shared (Sprint 2 deployment prep)
+
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.git/
+.gitignore
+
+# Never bake real secrets into an image layer
+.env
+
+# Local dev DB / debug artifacts -- the container should get a fresh
+# DB via init_db() or an attached volume, not a stale local copy
+nudge.db
+backend/manual_test.py
+
+# Docs/images aren't needed at runtime
+docs/

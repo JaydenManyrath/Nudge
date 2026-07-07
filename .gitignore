@@ -6,3 +6,6 @@ __pycache__/
 .pytest_cache/
 nudge.db
 '@ | Out-File -Encoding utf8 -Append .gitignore
+backend/manual_test.py
+
+backend/manual_check.py

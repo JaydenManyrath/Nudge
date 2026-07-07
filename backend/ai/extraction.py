@@ -22,7 +22,7 @@ class ExtractionError(Exception):
     """Raised when extraction fails outright (API error or unrecoverable bad output)."""
 
 
-def extract_tasks(transcript_text: str, job_id: int) -> dict:
+def extract_tasks(transcript_text: str, job_id: int, meeting_date: str = None) -> dict:
     """
     Runs the full extraction pipeline for a single job:
       1. Call the LLM                (llm_client.call_extraction)
@@ -30,6 +30,12 @@ def extract_tasks(transcript_text: str, job_id: int) -> dict:
 
     Returns a dict shaped:
       {"summary": str, "tasks": [{owner, description, due_date, priority, context}, ...]}
+
+    meeting_date: ISO 8601 date string for when the meeting actually
+    happened (e.g. from the jobs row's created_at). Passed through so
+    the LLM has an anchor point to resolve relative dates ("by Friday")
+    into real ISO dates. Defaults to today if not supplied, but callers
+    should pass the real meeting date once it's available on the job.
 
     Does NOT write to the database. The caller (job pipeline /
     routes/upload.py) is responsible for persisting each task as a
@@ -45,7 +51,7 @@ def extract_tasks(transcript_text: str, job_id: int) -> dict:
         raise ExtractionError(f"job_id={job_id}: transcript_text is empty")
 
     try:
-        raw_response = call_extraction(transcript_text)
+        raw_response = call_extraction(transcript_text, reference_date=meeting_date)
     except Exception as exc:
         raise ExtractionError(f"job_id={job_id}: LLM call failed: {exc}") from exc
 

@@ -112,6 +112,78 @@ def test_rejects_empty_owner():
         validate_extraction(data)
 
 
+def test_normalizes_string_null_to_none():
+    """LLM sometimes returns the string "null" instead of JSON null -- must
+    come out as Python None, not the literal string, so it doesn't get
+    stored as a fake deadline downstream."""
+    data = {
+        "summary": "ok",
+        "tasks": [
+            {
+                "owner": "Sam",
+                "description": "Update the logo",
+                "due_date": "null",
+                "priority": "normal",
+                "context": "...",
+            }
+        ],
+    }
+    result = validate_extraction(data)
+    assert result["tasks"][0]["due_date"] is None
+
+
+def test_normalizes_other_null_like_strings():
+    for value in ["None", "N/A", "n/a", "NONE", ""]:
+        data = {
+            "summary": "ok",
+            "tasks": [
+                {
+                    "owner": "Sam",
+                    "description": "Update the logo",
+                    "due_date": value,
+                    "priority": "normal",
+                    "context": "...",
+                }
+            ],
+        }
+        result = validate_extraction(data)
+        assert result["tasks"][0]["due_date"] is None, f"failed for value={value!r}"
+
+
+def test_rejects_non_iso_due_date():
+    data = {
+        "summary": "ok",
+        "tasks": [
+            {
+                "owner": "Sam",
+                "description": "Update the logo",
+                "due_date": "next Friday",
+                "priority": "normal",
+                "context": "...",
+            }
+        ],
+    }
+    with pytest.raises(ExtractionValidationError, match="due_date"):
+        validate_extraction(data)
+
+
+def test_accepts_valid_iso_due_date():
+    data = {
+        "summary": "ok",
+        "tasks": [
+            {
+                "owner": "Sam",
+                "description": "Update the logo",
+                "due_date": "2026-07-10",
+                "priority": "normal",
+                "context": "...",
+            }
+        ],
+    }
+    result = validate_extraction(data)
+    assert result["tasks"][0]["due_date"] == "2026-07-10"
+
+
 def test_strips_whitespace_from_string_fields():
     data = {
         "summary": "  Trimmed summary.  ",

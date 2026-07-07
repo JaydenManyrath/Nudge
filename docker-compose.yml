@@ -1,0 +1,29 @@
+# Owner: shared (Sprint 2 deployment prep)
+#
+# Local dev convenience only -- Render deployment does NOT use this file,
+# it builds the Dockerfile directly. This just lets anyone on the team
+# run `docker compose up` and get a working container without manually
+# building/running/mounting things by hand.
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      - PORT=5000
+    volumes:
+      # Bind-mount the repo so code changes don't require a rebuild.
+      - .:/app
+      # Named volume so the SQLite file survives container restarts
+      # without being wiped by the bind mount above.
+      - nudge_data:/app/data
+    # gunicorn+eventlet doesn't auto-reload on code changes -- restart
+    # the container after edits, or swap the Dockerfile CMD for
+    # `flask --app app run --debug` during local iteration if that's
+    # preferred. Left as gunicorn here so local behavior matches prod.
+
+volumes:
+  nudge_data:

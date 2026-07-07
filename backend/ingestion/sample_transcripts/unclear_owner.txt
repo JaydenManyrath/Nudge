@@ -1,0 +1,11 @@
+[Ops Check-in]
+
+Blair: Before we go, the vendor invoice from last month still hasn't been reconciled.
+Nico: Huh, I thought that got handled already.
+Blair: Doesn't look like it. Someone needs to go through it and match it against the PO.
+Nico: I don't think that's mine, I don't have access to the finance sheet.
+Blair: Fair. I don't really have bandwidth for it this week either.
+Nico: Maybe it just waits until next check-in?
+Blair: I guess so, we're out of time anyway. Let's revisit it next time.
+Nico: Works for me.
+Blair: Okay, that's everything. Talk next week.
