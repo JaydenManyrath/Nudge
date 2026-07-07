@@ -8,7 +8,7 @@ Nudge turns Zoom meeting transcripts into tracked, assigned tasks. It pulls a tr
 2. **Extract** — the transcript is sent to OpenAI, which returns structured task candidates (owner, description, due date) following the contract in `docs/task_schema.md`.
 3. **Review** — a manager reviews extracted tasks on the review screen and approves, edits, or rejects each one.
 4. **Sync** — approved tasks are written to the database and pushed to Google Calendar (OAuth) as events with deadlines.
-5. **Track** — manager and employee dashboards show task status, with real-time updates over WebSockets and threaded comments on individual tasks.
+5. **Track** — manager and employee dashboards show task status as a Trello-style board (Pending / Blocked / Done columns), with real-time updates over WebSockets and threaded comments on individual tasks.
 
 ## Stack
 
@@ -39,7 +39,7 @@ nudge/
 │   ├── realtime/                # WebSocket events
 │   └── tests/                   # unit tests
 ├── frontend/
-│   ├── templates/                # base, manager review, manager/employee dashboards
+│   ├── templates/                # base, manager review, manager/employee dashboards (Trello-style board view)
 │   └── static/                   # css, js (task cards, comment threads, sockets)
 └── docs/
     ├── task_schema.md            # OpenAI output ↔ DB contract

@@ -1,10 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Nudge{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    {% block content %}{% endblock %}
+    <header class="topnav">
+        <div class="topnav-brand">Nudge</div>
+        <div class="topnav-page">{% block page_title %}{% endblock %}</div>
+        <div class="topnav-actions">
+            <span class="notif-badge">Notifications ({{ notification_count | default(0) }})</span>
+            {% if current_user %}
+            <span class="topnav-user">{{ current_user.name }} &middot; {{ current_user.role }}</span>
+            {% endif %}
+            <a class="topnav-logout" href="{{ url_for('auth.logout') if url_for is defined else '#' }}">Logout</a>
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) if get_flashed_messages is defined else [] %}
+        {% if messages %}
+        <div class="flash-region">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
 </body>
 </html>

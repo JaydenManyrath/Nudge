@@ -1,3 +1,58 @@
 {% extends "base.html" %}
+
+{% block title %}My Tasks - Nudge{% endblock %}
+{% block page_title %}My Tasks{% endblock %}
+
 {% block content %}
+{% set summary = summary | default({"due_today": 1, "due_this_week": 3, "blocked": 1}) %}
+{% set tasks = tasks | default([
+    {"id": 1, "description": "Finalize pricing page copy", "due_date": "Jul 10", "priority": "urgent", "status": "pending", "from_meeting": "Sprint Planning meeting", "context": "Priya said she would finish pricing copy by Friday."},
+    {"id": 2, "description": "Draft onboarding checklist", "due_date": "No due date", "priority": "normal", "status": "pending", "from_meeting": "Launch Readiness meeting", "context": "From Launch Readiness meeting"}
+]) %}
+{% set columns = [
+    {"key": "pending", "label": "Pending"},
+    {"key": "blocked", "label": "Blocked"},
+    {"key": "done", "label": "Done"}
+] %}
+
+<section class="metrics-row">
+    <div class="metric-tile">Due Today: {{ summary.due_today }}</div>
+    <div class="metric-tile">Due This Week: {{ summary.due_this_week }}</div>
+    <div class="metric-tile metric-tile-blocked">Blocked: {{ summary.blocked }}</div>
+</section>
+
+<div class="board">
+    {% for column in columns %}
+    <div class="board-column">
+        <div class="board-column-header">{{ column.label }}</div>
+        <div class="board-column-cards">
+            {% for task in tasks if task.status == column.key %}
+            <article class="task-card priority-{{ task.priority }}">
+                <div class="task-card-description">{{ task.description }}</div>
+                <div class="task-card-meta">
+                    <span class="task-card-due">Due {{ task.due_date }}</span>
+                    <span class="task-card-priority">{{ task.priority }}</span>
+                </div>
+                <p class="task-card-context">From: {{ task.from_meeting }}</p>
+                <p class="task-card-context">{{ task.context }}</p>
+                <div class="task-card-actions">
+                    <button type="button" class="btn btn-link">Mark Done</button>
+                    <button type="button" class="btn btn-link">Add Blocker</button>
+                    <button type="button" class="btn btn-link">Comment</button>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<section class="comment-drawer">
+    <h2>Comment Thread</h2>
+    <p class="comment-drawer-empty">Select a task to view its comment thread.</p>
+    <form class="comment-form">
+        <input type="text" placeholder="Write a comment...">
+        <button type="submit" class="btn btn-link">Send</button>
+    </form>
+</section>
 {% endblock %}

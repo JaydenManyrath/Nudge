@@ -1,3 +1,74 @@
 {% extends "base.html" %}
+
+{% block title %}Manager Dashboard - Nudge{% endblock %}
+{% block page_title %}Manager Dashboard{% endblock %}
+
 {% block content %}
+{% set metrics = metrics | default({"open": 14, "due_soon": 4, "blocked": 2, "overdue": 1}) %}
+{% set tasks = tasks | default([
+    {"id": 1, "owner": "Priya", "description": "Finalize pricing page copy", "due_date": "Jul 10", "priority": "urgent", "status": "pending", "context": "From Sprint Planning meeting"},
+    {"id": 2, "owner": "Marco", "description": "Create customer rollout notes", "due_date": "Jul 11", "priority": "normal", "status": "blocked", "context": "Waiting on customer list export"},
+    {"id": 3, "owner": "Priya", "description": "Draft onboarding checklist", "due_date": "No due date", "priority": "normal", "status": "pending", "context": "From Launch Readiness meeting"},
+    {"id": 4, "owner": "Marco", "description": "Ship checkout fix", "due_date": "Jul 8", "priority": "urgent", "status": "done", "context": "From Bug Triage meeting"}
+]) %}
+{% set columns = [
+    {"key": "pending", "label": "Pending"},
+    {"key": "blocked", "label": "Blocked"},
+    {"key": "done", "label": "Done"}
+] %}
+
+<section class="metrics-row">
+    <div class="metric-tile">Open Tasks: {{ metrics.open }}</div>
+    <div class="metric-tile">Due Soon: {{ metrics.due_soon }}</div>
+    <div class="metric-tile metric-tile-blocked">Blocked: {{ metrics.blocked }}</div>
+    <div class="metric-tile metric-tile-overdue">Overdue: {{ metrics.overdue }}</div>
+</section>
+
+<section class="filters-row">
+    <input type="search" placeholder="Search" class="filter-search">
+    <select class="filter-select"><option>Owner: All</option></select>
+    <select class="filter-select"><option>Status: All</option></select>
+    <select class="filter-select"><option>Priority: All</option></select>
+</section>
+
+<div class="board-layout">
+    <div class="board">
+        {% for column in columns %}
+        <div class="board-column">
+            <div class="board-column-header">{{ column.label }} ({{ tasks | selectattr("status", "equalto", column.key) | list | length }})</div>
+            <div class="board-column-cards">
+                {% for task in tasks if task.status == column.key %}
+                <article class="task-card priority-{{ task.priority }}">
+                    <div class="task-card-owner">{{ task.owner }}</div>
+                    <div class="task-card-description">{{ task.description }}</div>
+                    <div class="task-card-meta">
+                        <span class="task-card-due">Due {{ task.due_date }}</span>
+                        <span class="task-card-priority">{{ task.priority }}</span>
+                    </div>
+                    <p class="task-card-context">{{ task.context }}</p>
+                    <div class="task-card-actions">
+                        <button type="button" class="btn btn-link">View Comments</button>
+                        {% if column.key == "blocked" %}
+                        <button type="button" class="btn btn-link">Resolve Blocker</button>
+                        {% else %}
+                        <button type="button" class="btn btn-link">Mark Done</button>
+                        {% endif %}
+                        <button type="button" class="btn btn-link">Edit</button>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <aside class="board-sidepanel">
+        <h2>Recent Comments</h2>
+        <p class="sidepanel-empty">No recent comments.</p>
+        <h2>Calendar Sync Errors</h2>
+        <p class="sidepanel-empty">No sync errors.</p>
+        <h2>Upcoming Deadlines</h2>
+        <p class="sidepanel-empty">No upcoming deadlines.</p>
+    </aside>
+</div>
 {% endblock %}
