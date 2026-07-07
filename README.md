@@ -16,7 +16,7 @@ Nudge turns Zoom meeting transcripts into tracked, assigned tasks. It pulls a tr
 - **AI:** OpenAI API (key-based, no OAuth)
 - **Integrations:** Zoom API (OAuth), Google Calendar API (OAuth)
 - **Frontend:** Jinja templates, vanilla CSS/JS, WebSockets for realtime
-- **Deployment:** Docker, Render (`render.yaml`)
+- **Deployment:** Docker (gunicorn + eventlet via `wsgi:app`), Render
 - **Local dev:** `docker-compose.yml` (Flask + SQLite volume)
 
 ## Architecture
@@ -25,28 +25,35 @@ Nudge turns Zoom meeting transcripts into tracked, assigned tasks. It pulls a tr
 
 ## Project Structure
 
+The app is mid-migration from a flat root layout toward a `backend/` package. AI extraction and ingestion already live in `backend/`; the Flask app, routes, and frontend are still at the repo root. Both are tracked below.
+
 ```
 nudge/
-├── backend/
-│   ├── app.py                  # Flask app factory
-│   ├── wsgi.py                 # gunicorn entrypoint
+├── app.py                       # Flask app factory + SocketIO init (local dev entrypoint)
+├── wsgi.py                      # gunicorn/production WSGI entrypoint (imports create_app)
+├── auth.py                      # flask-login setup, manager_required
+├── models.py                    # SQLite schema stub (root)
+├── extraction.py                # extraction stub (root; superseded by backend/ai/)
+├── integrations.py              # calendar invites, .ics, task + reminder emails
+├── rtms.py                      # Zoom RTMS WebSocket handlers
+├── sockets.py                   # SocketIO events pushing transcript to browser
+├── scheduler.py                 # daily overdue / due-soon sweep
+├── routes/                      # dashboard, review, upload, api blueprints
+├── templates/                   # base, login, live, review, manager/employee dashboards (Trello-style board view)
+├── static/                      # style.css, live.js (SocketIO client)
+├── tests/                       # placeholder unit-test stubs
+├── backend/                     # package-style modules (newer layout)
 │   ├── config.py
-│   ├── models/                 # SQLAlchemy models: user, meeting, task, comment
-│   ├── ingestion/               # Zoom OAuth + transcript fetch/loading
-│   ├── ai/                      # OpenAI client, prompts, schema, parsing
-│   ├── calendar_integration/    # Google OAuth flow + calendar sync
-│   ├── routes/                  # auth, meetings, tasks, comments
-│   ├── realtime/                # WebSocket events
-│   └── tests/                   # unit tests
-├── frontend/
-│   ├── templates/                # base, manager review, manager/employee dashboards (Trello-style board view)
-│   └── static/                   # css, js (task cards, comment threads, sockets)
-└── docs/
-    ├── task_schema.md            # OpenAI output ↔ DB contract
-    ├── architecture.svg          # system diagram: live capture → approval → distribution
-    ├── wireframe.md
-    ├── standup_notes.md
-    └── sprint1_plan.md / sprint2_plan.md / sprint3_plan.md
+│   ├── ai/                      # OpenAI client, prompts, schema, parser, extraction
+│   ├── ingestion/               # transcript_loader + sample_transcripts/
+│   ├── models/                  # SQLAlchemy models: user, meeting
+│   └── tests/                   # test_ai_parser.py, test_transcript_loader.py
+├── docs/                        # problem statement, sprint plans, task schema, wireframe, architecture.svg
+├── Dockerfile                   # gunicorn + eventlet, binds $PORT, runs wsgi:app
+├── docker-compose.yml           # local dev convenience (docker compose up)
+├── pytest.ini                   # scopes test collection to backend/tests + tests
+├── requirements.txt
+└── .env.example
 ```
 
 ## Setup
@@ -55,12 +62,31 @@ nudge/
 git clone <repo-url>
 cd nudge
 cp .env.example .env        # fill in Zoom, OpenAI, Google Calendar keys/secrets
-docker-compose up           # local dev: Flask + SQLite
+```
+
+**Local (venv):**
+
+```bash
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python app.py               # or: flask --app app run
+```
+
+**Local (Docker):**
+
+```bash
+docker compose up           # builds the Dockerfile, serves on :5000
 ```
 
 Required env vars (see `.env.example`): Zoom OAuth client ID/secret, OpenAI API key, Google Calendar OAuth client ID/secret.
 
-Production deploys via `Dockerfile` + `render.yaml` on Render.
+Production builds the `Dockerfile` (gunicorn `wsgi:app`, binds `$PORT`) and deploys to Render. A `render.yaml` is not committed yet — Render is configured against the Dockerfile directly.
+
+## Tests
+
+```bash
+pytest                      # 25 tests (pytest.ini collects backend/tests + tests)
+```
 
 ## Authentication
 
@@ -79,7 +105,7 @@ OpenAI API access is key-based rather than OAuth, so it sits outside the "APIs w
 | **Dev B** | Models, routes, Google Calendar integration, and realtime sockets |
 | **Dev C** | Frontend — templates, CSS/JS, dashboard rendering |
 
-Tests are split across all three: `test_ai_parser.py`, `test_zoom_client.py` (Dev A), `test_calendar_sync.py`, `test_task_endpoints.py`, `test_meeting_endpoints.py` (Dev B), `test_dashboard_render.py` (Dev C).
+Current tests: `backend/tests/test_ai_parser.py` and `backend/tests/test_transcript_loader.py` (Dev A, 19 assertions). Route, integration, and dashboard tests (Dev B / Dev C) are planned but not yet written; the `tests/` directory currently holds placeholder stubs.
 
 ## Timeline
 
