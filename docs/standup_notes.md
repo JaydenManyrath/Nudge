@@ -72,6 +72,40 @@ Use this file to record daily Scrum updates and sprint planning notes. Keep entr
 
 - [ ] Dev A - Commit parser schema and at least six parser tests.
 - [ ] Dev B - Create draft task approval route and task status transition.
-- [ ] Dev C - Create the manager review screen using editable task cards.
+- [x] Dev C - Create the manager review screen using editable task cards.
 - [ ] Team - Add a real citation/statistic to `docs/problem_statement.md`.
+
+## Standup: 2026-07-07
+
+**Sprint:** Sprint 1
+
+**Attendees:** Dev A, Dev B, Dev C
+
+**Sprint Goal Reminder:** Build a stubbed end-to-end flow where a sample transcript becomes draft tasks, a manager approves them, and an employee can see assigned work.
+
+### Dev A
+
+- Yesterday:
+- Today:
+- Blockers:
+
+### Dev B
+
+- Yesterday:
+- Today:
+- Blockers:
+
+### Dev C
+
+- Yesterday: Reviewed dashboard requirements and wireframe.
+- Today: Built `templates/base.html` shared layout, `templates/review.html` editable draft task cards, and the manager/employee dashboards as a Trello-style board (Pending/Blocked/Done columns), plus light styling in `static/style.css`. Templates render standalone with mock data until Dev B's routes land.
+- Blockers: Waiting on Dev B for final field names and route context to swap mock data for live template variables.
+
+### Decisions
+
+- Dashboards use a Trello-style Kanban board (Pending / Blocked / Done) instead of a flat task list.
+
+### Action Items
+
+- [ ] Dev B - Share final `Task` field names and route context objects so Dev C can wire templates to live data.
 

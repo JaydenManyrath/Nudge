@@ -89,9 +89,10 @@ Use this table as the sprint kanban board. The team can copy it into a Google Sh
 | To Do | Draft task models | Dev B | `models.py` |
 | To Do | Manager approval routes | Dev B | `routes/review.py` |
 | To Do | Dashboard routes | Dev B | `routes/dashboard.py` |
-| To Do | Review template | Dev C | `templates/review.html` |
-| To Do | Manager and employee dashboards | Dev C | `templates/dashboard_manager.html`, `templates/dashboard_employee.html` |
-| To Do | Base styling | Dev C | `static/style.css` |
+| Done | Shared base layout | Dev C | `templates/base.html` |
+| Done | Review template | Dev C | `templates/review.html` |
+| Done | Manager and employee dashboards (Trello-style board) | Dev C | `templates/dashboard_manager.html`, `templates/dashboard_employee.html` |
+| Done | Base styling | Dev C | `static/style.css` |
 
 TODO: Update statuses daily during standup.
 

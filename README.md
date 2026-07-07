@@ -44,7 +44,7 @@ nudge/
 └── docs/
     ├── task_schema.md            # OpenAI output ↔ DB contract
     ├── architecture.svg          # system diagram: live capture → approval → distribution
-    ├── wireframe.png
+    ├── wireframe.md
     ├── standup_notes.md
     └── sprint1_plan.md / sprint2_plan.md / sprint3_plan.md
 ```
