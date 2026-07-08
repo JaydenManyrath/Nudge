@@ -83,14 +83,19 @@ TODO: Some current test files contain placeholder functions. Replace placeholder
 | Status | Task | Owner | File(s) |
 | --- | --- | --- | --- |
 | To Do | SocketIO backend events | Dev B | `sockets.py`, `routes/api.py`, `routes/review.py` |
-| To Do | SocketIO browser client | Dev C | `static/live.js` |
+| Done | SocketIO browser client | Dev C | `static/realtime.js`, `static/live.js` |
 | To Do | Comment endpoints | Dev B | `routes/api.py`, `models.py` |
-| To Do | Comment thread UI | Dev C | `templates/dashboard_employee.html`, `templates/dashboard_manager.html` |
-| To Do | Blocker workflow | Dev B / Dev C | `routes/api.py`, dashboard templates |
+| Done | Comment thread UI | Dev C | `templates/_comment_drawer.html`, dashboard templates |
+| In Progress | Blocker workflow | Dev B / Dev C | `routes/api.py`, dashboard templates (frontend done; backend endpoint pending) |
 | To Do | Scheduler reminders | Dev B | `scheduler.py`, `integrations.py` |
 | To Do | Render deployment | Dev B | `Dockerfile`, Render settings |
 | To Do | Edge case demo data | Dev A | sample transcripts, seeded data |
-| To Do | Final responsive polish | Dev C | `static/style.css` |
+| Done | Final responsive polish | Dev C | `static/style.css` |
+
+Dev C frontend note: the realtime client and comment UI are built against a
+documented contract (see the header of `static/realtime.js`). They stay inert
+until Dev B emits the matching SocketIO events and implements the comment /
+blocker / done endpoints in `routes/api.py` and `sockets.py`.
 
 TODO: Update statuses daily during standup.
 
