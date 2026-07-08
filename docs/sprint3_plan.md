@@ -82,13 +82,13 @@ TODO: Some current test files contain placeholder functions. Replace placeholder
 
 | Status | Task | Owner | File(s) |
 | --- | --- | --- | --- |
-| To Do | SocketIO backend events | Dev B | `sockets.py`, `routes/api.py`, `routes/review.py` |
+| Done | SocketIO backend events | Dev B | `sockets.py`, `routes/api.py`, `routes/review.py` (now scoped by owner/room) |
 | Done | SocketIO browser client | Dev C | `static/realtime.js`, `static/live.js` |
-| To Do | Comment endpoints | Dev B | `routes/api.py`, `models.py` |
+| Done | Comment endpoints | Dev B | `routes/api.py`, `models.py` |
 | Done | Comment thread UI | Dev C | `templates/_comment_drawer.html`, dashboard templates |
 | Done | Blocker workflow | Dev B / Dev C | `routes/api.py`, dashboard templates (backend endpoints implemented; employee + manager resolve-blocker buttons wired) |
-| To Do | Scheduler reminders | Dev B | `scheduler.py`, `integrations.py` |
-| To Do | Vercel deployment | Dev B | `Dockerfile.vercel`, Vercel project settings |
+| Done | Scheduler reminders | Dev B | `scheduler.py`, `integrations.py` (started in create_app; honors DUE_SOON_HOURS; dedupe verified) |
+| To Do | Deployment (Render recommended over Vercel for realtime) | Dev B | `render.yaml` ready; `Dockerfile.vercel` present |
 | To Do | Edge case demo data | Dev A | sample transcripts, seeded data |
 | Done | Final responsive polish | Dev C | `static/style.css` |
 
