@@ -1,0 +1,18 @@
+{# Shared comment thread drawer. Populated by static/realtime.js when a
+   task's "View Comments" / "Comment" action is clicked. Hidden until then. #}
+<section class="comment-drawer" id="comment-drawer" hidden aria-live="polite">
+    <div class="comment-drawer-header">
+        <h2>Comments — <span class="comment-drawer-task" data-drawer-task>Task</span></h2>
+        <button type="button" class="btn btn-link" data-drawer-close>Close</button>
+    </div>
+
+    <div class="comment-thread" data-comment-thread>
+        <p class="comment-drawer-empty">No comments yet.</p>
+    </div>
+
+    <form class="comment-form" data-comment-form>
+        <input type="text" name="body" placeholder="Write a comment..." autocomplete="off" data-comment-input>
+        <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+    <p class="comment-form-hint" data-comment-hint></p>
+</section>

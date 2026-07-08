@@ -613,6 +613,156 @@ a {
   margin-top: 20px;
 }
 
+/* ---------- Task visual states + badges (Sprint 3) ---------- */
+
+.task-card-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.task-card-badges:empty {
+  display: none;
+}
+
+.task-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.badge-overdue {
+  background: var(--red-bg);
+  color: #ae2a19;
+}
+
+.badge-due-soon {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+
+.badge-blocked {
+  background: #fff1e6;
+  color: var(--amber);
+}
+
+.badge-done {
+  background: var(--green-bg);
+  color: var(--green-dark);
+}
+
+.task-card.status-done {
+  opacity: 0.72;
+}
+
+.task-card.status-done .task-card-description {
+  text-decoration: line-through;
+  text-decoration-color: var(--text-muted);
+}
+
+.task-card.status-blocked {
+  background: #fffaf3;
+}
+
+/* ---------- Comment drawer + thread (Sprint 3) ---------- */
+
+.comment-drawer {
+  margin-top: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.comment-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.comment-drawer-header h2 {
+  margin: 0;
+}
+
+.comment-drawer-task {
+  font-weight: 700;
+}
+
+.comment-thread {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  background: var(--canvas);
+  margin-bottom: 12px;
+}
+
+.comment {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.comment:last-child {
+  margin-bottom: 0;
+}
+
+.comment-head {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.comment-role {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.comment-body {
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.comment-unsent {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.comment-drawer-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  text-align: center;
+}
+
+.comment-form {
+  display: flex;
+  gap: 8px;
+}
+
+.comment-form input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.comment-form-hint {
+  font-size: 12px;
+  color: var(--red);
+  margin: 6px 0 0;
+  min-height: 14px;
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 860px) {
@@ -625,5 +775,20 @@ a {
   .board-sidepanel,
   .review-sidebar {
     width: 100%;
+  }
+
+  .topnav {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .topnav-page {
+    order: 3;
+    width: 100%;
+  }
+
+  .board-column {
+    min-width: 240px;
+    width: 240px;
   }
 }

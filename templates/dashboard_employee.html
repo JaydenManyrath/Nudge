@@ -6,8 +6,8 @@
 {% block content %}
 {% set summary = summary | default({"due_today": 1, "due_this_week": 3, "blocked": 1}) %}
 {% set tasks = tasks | default([
-    {"id": 1, "description": "Finalize pricing page copy", "due_date": "Jul 10", "priority": "urgent", "status": "pending", "from_meeting": "Sprint Planning meeting", "context": "Priya said she would finish pricing copy by Friday."},
-    {"id": 2, "description": "Draft onboarding checklist", "due_date": "No due date", "priority": "normal", "status": "pending", "from_meeting": "Launch Readiness meeting", "context": "From Launch Readiness meeting"}
+    {"id": 1, "description": "Finalize pricing page copy", "due_date": "Jul 6", "due_date_iso": "2026-07-06", "priority": "urgent", "status": "pending", "from_meeting": "Sprint Planning meeting", "context": "Priya said she would finish pricing copy by Friday."},
+    {"id": 2, "description": "Draft onboarding checklist", "due_date": "Jul 9", "due_date_iso": "2026-07-09", "priority": "normal", "status": "pending", "from_meeting": "Launch Readiness meeting", "context": "From Launch Readiness meeting"}
 ]) %}
 {% set columns = [
     {"key": "pending", "label": "Pending"},
@@ -21,24 +21,30 @@
     <div class="metric-tile metric-tile-blocked">Blocked: {{ summary.blocked }}</div>
 </section>
 
-<div class="board">
+<div class="board" id="board">
     {% for column in columns %}
-    <div class="board-column">
-        <div class="board-column-header">{{ column.label }}</div>
-        <div class="board-column-cards">
+    <div class="board-column" data-column="{{ column.key }}">
+        <div class="board-column-header">
+            {{ column.label }} <span class="board-column-count" data-count="{{ column.key }}">({{ tasks | selectattr("status", "equalto", column.key) | list | length }})</span>
+        </div>
+        <div class="board-column-cards" data-column-cards="{{ column.key }}">
             {% for task in tasks if task.status == column.key %}
-            <article class="task-card priority-{{ task.priority }}">
+            <article class="task-card priority-{{ task.priority }} status-{{ task.status }}"
+                     data-task-id="{{ task.id }}"
+                     data-status="{{ task.status }}"
+                     data-priority="{{ task.priority }}"
+                     data-due="{{ task.due_date_iso | default('') }}">
+                <div class="task-card-badges" data-badges></div>
                 <div class="task-card-description">{{ task.description }}</div>
                 <div class="task-card-meta">
                     <span class="task-card-due">Due {{ task.due_date }}</span>
                     <span class="task-card-priority">{{ task.priority }}</span>
                 </div>
                 <p class="task-card-context">From: {{ task.from_meeting }}</p>
-                <p class="task-card-context">{{ task.context }}</p>
                 <div class="task-card-actions">
-                    <button type="button" class="btn btn-link">Mark Done</button>
-                    <button type="button" class="btn btn-link">Add Blocker</button>
-                    <button type="button" class="btn btn-link">Comment</button>
+                    <button type="button" class="btn btn-link" data-action="done" data-task-id="{{ task.id }}">Mark Done</button>
+                    <button type="button" class="btn btn-link" data-action="blocker" data-task-id="{{ task.id }}">Add Blocker</button>
+                    <button type="button" class="btn btn-link" data-action="comments" data-task-id="{{ task.id }}">Comment</button>
                 </div>
             </article>
             {% endfor %}
@@ -47,12 +53,10 @@
     {% endfor %}
 </div>
 
-<section class="comment-drawer">
-    <h2>Comment Thread</h2>
-    <p class="comment-drawer-empty">Select a task to view its comment thread.</p>
-    <form class="comment-form">
-        <input type="text" placeholder="Write a comment...">
-        <button type="submit" class="btn btn-link">Send</button>
-    </form>
-</section>
+{% include "_comment_drawer.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='realtime.js') }}"></script>
 {% endblock %}
