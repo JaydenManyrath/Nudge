@@ -119,8 +119,14 @@ cp .env.example .env        # fill in Zoom, OpenAI, Google Calendar keys/secrets
 ```bash
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
+python -c "from models import init_db; init_db()"   # create + seed nudge.db
 python app.py               # or: flask --app app run
 ```
+
+Then open http://localhost:5000 and sign in with a seeded account —
+`maya@nudge.local` (manager) or `marco@nudge.local` (employee), password
+`demo1234` (override with `NUDGE_DEMO_PASSWORD`). Reset a password on an
+existing database with `python -m scripts.set_password <email> <password>`.
 
 **Local (Docker):**
 
@@ -141,6 +147,12 @@ Vercel deployment notes:
 - `NUDGE_DB_PATH=/var/data/nudge.db` is the runtime SQLite location. Treat this as instance-local unless Vercel persistent storage is explicitly attached/configured.
 - The app exposes unauthenticated `GET /healthz` for container health checks.
 - Configure Vercel environment variables for `SECRET_KEY`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_SECRET_TOKEN`, `OPENAI_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, optional `SENDGRID_API_KEY`, and optionally `PUBLIC_BASE_URL=https://<your-domain>` and `NUDGE_SEED_DEMO_DATA=false`.
+
+> **Realtime caveat:** SocketIO live updates need a persistent, WebSocket-capable
+> process. Vercel's serverless model does not hold long-lived connections, so the
+> HTTP app works there but realtime push may silently fall back to polling or fail.
+> For working realtime, deploy the same image to a persistent container host — the
+> committed `render.yaml` (a Render Docker web service) runs it as-is.
 - The Vercel image defaults to port `80`; if you override `PORT` in Vercel, the container will bind to that value.
 - Register these OAuth callback paths with the deployed Vercel domain: `/auth/zoom/callback` and `/auth/google/callback`.
 - Test locally with Docker before deploying:
