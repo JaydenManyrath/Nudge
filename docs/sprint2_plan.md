@@ -20,7 +20,7 @@ Replace Sprint 1 stubs with authorized Zoom RTMS transcript ingestion and Google
 
 Owner: AI extraction pipeline
 
-- Tune the Claude prompt in `backend/ai/prompts.py` or `extraction.py`.
+- Tune the OpenAI prompt in `backend/ai/prompts.py` or `extraction.py`.
 - Confirm parser output remains stable when transcript text comes from Zoom RTMS instead of sample files.
 - Add edge case sample transcripts:
   - no action items
@@ -83,7 +83,7 @@ TODO: Replace TODO names with actual test functions once implemented.
 - Zoom OAuth flow can be started from the app.
 - RTMS handler can accept live or simulated transcript chunks.
 - Manual transcript upload still works as a fallback.
-- Claude extraction receives the final transcript after meeting end.
+- OpenAI extraction receives the final transcript after meeting end.
 - Google Calendar OAuth flow can be started from the app.
 - Approved task with a due date creates or simulates a calendar event.
 - Calendar sync failure does not delete or lose the approved task.

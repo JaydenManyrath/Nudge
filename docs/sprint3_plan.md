@@ -76,7 +76,7 @@ TODO: Some current test files contain placeholder functions. Replace placeholder
 - Scheduler avoids duplicate due-soon or overdue reminders.
 - App runs from Docker.
 - App is deployed on Render or has a documented Render deployment command.
-- Demo script covers Zoom/manual transcript, Claude extraction, manager approval, employee dashboard, comments, and calendar sync.
+- Demo script covers Zoom/manual transcript, OpenAI extraction, manager approval, employee dashboard, comments, and calendar sync.
 
 ## Progress Board
 
@@ -104,7 +104,7 @@ TODO: Update statuses daily during standup.
 - [ ] Manager logs in.
 - [ ] Manager connects or shows Zoom integration.
 - [ ] Manager uploads fallback transcript if live RTMS is unavailable.
-- [ ] Claude extraction produces summary and draft tasks.
+- [ ] OpenAI extraction produces summary and draft tasks.
 - [ ] Manager approves one task and edits another.
 - [ ] Approved task appears on employee dashboard.
 - [ ] Employee comments on the task.

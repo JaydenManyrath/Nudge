@@ -23,6 +23,54 @@ Nudge turns Zoom meeting transcripts into tracked, assigned tasks. It pulls a tr
 
 ![Nudge architecture: live transcript capture through manager-approved distribution](docs/architecture.svg)
 
+### Meeting-to-task sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Zoom as Zoom RTMS
+    participant Upload as Manual Upload
+    participant RTMS as rtms.py
+    participant Extract as extraction.py
+    participant LLM as OpenAI API
+    participant Parser as parser.py validation
+    participant DB as SQLite via SQLAlchemy
+    participant Review as routes/review.py
+    participant SocketIO as Flask-SocketIO
+    participant Employee as Employee Dashboard
+    participant Calendar as Google Calendar API
+    participant Integrations as integrations.py
+
+    alt Live Zoom meeting
+        Zoom->>RTMS: Stream transcript chunks
+        RTMS->>SocketIO: Push live transcript text to browser
+        RTMS->>Extract: Handoff final transcript at meeting end
+    else Manual fallback
+        Upload->>Extract: Submit uploaded transcript file
+    end
+
+    Extract->>LLM: Send transcript and structured extraction prompt
+    LLM-->>Extract: Return meeting summary and draft task JSON
+    Extract->>Parser: Validate JSON contract
+
+    alt Valid extraction
+        Parser-->>Extract: Clean parsed meeting payload
+        Extract->>DB: Create Meeting row
+        Extract->>DB: Create draft Task rows
+        Review->>DB: Load draft tasks for manager review
+        Review->>DB: Approve, edit, or reject each draft
+        Review->>SocketIO: Broadcast approved task update
+        SocketIO->>Employee: Refresh task list and notification badge
+        Review->>Integrations: Request calendar sync for approved tasks
+        Integrations->>Calendar: Create calendar event using OAuth token
+        Calendar-->>Integrations: Return event id/link
+        Integrations->>DB: Store calendar sync metadata
+    else Invalid extraction
+        Parser-->>Extract: Raise validation error
+        Extract->>DB: Mark extraction failed or needs manual review
+    end
+```
+
 ## Project Structure
 
 The app is mid-migration from a flat root layout toward a `backend/` package. AI extraction and ingestion already live in `backend/`; the Flask app, routes, and frontend are still at the repo root. Both are tracked below.

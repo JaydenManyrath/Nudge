@@ -43,7 +43,7 @@ Primary users:
 
 ## Proposed Solution
 
-Nudge captures a Zoom meeting transcript through RTMS or manual upload, sends the transcript to Claude, extracts a meeting summary and structured draft tasks, and lets a manager review those tasks before they become real assignments.
+Nudge captures a Zoom meeting transcript through RTMS or manual upload, sends the transcript to OpenAI, extracts a meeting summary and structured draft tasks, and lets a manager review those tasks before they become real assignments.
 
 Approved tasks are then:
 
@@ -73,7 +73,7 @@ TODO: Add a brief comparison table with the exact features offered by Otter.ai a
 Nudge is successful if the demo can show this complete flow:
 
 1. A Zoom RTMS transcript or uploaded transcript enters the system.
-2. Claude extracts a meeting summary and draft tasks.
+2. OpenAI extracts a meeting summary and draft tasks.
 3. The parser validates the structured output.
 4. A manager reviews, edits, approves, or rejects each draft task.
 5. Approved tasks appear on manager and employee dashboards.
@@ -85,7 +85,5 @@ Nudge is successful if the demo can show this complete flow:
 - The first version uses SQLite because the project scope is small and student-demo focused.
 - Managers are responsible for reviewing AI output before employees see final assignments.
 - The team will use OAuth for Zoom and Google Calendar.
-- Claude is the LLM used for the final project write-up.
-
-TODO: The current repository README mentions OpenAI in a few places. Update README or this document after the team confirms whether the final LLM provider is Claude or OpenAI.
+- OpenAI is the LLM used for the final project write-up (decided in Sprint 1; see the model-choice note in `docs/task_schema.md`).
 
