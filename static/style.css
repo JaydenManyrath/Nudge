@@ -550,6 +550,8 @@ a {
   margin: 12px 0 4px;
 }
 
+.upload-form input,
+.upload-form select,
 .upload-form textarea {
   width: 100%;
   border: 1px solid var(--border);
@@ -557,6 +559,9 @@ a {
   padding: 8px;
   font-family: inherit;
   font-size: 13px;
+}
+
+.upload-form textarea {
   resize: vertical;
 }
 

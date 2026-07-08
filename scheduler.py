@@ -4,9 +4,12 @@ scheduler = BackgroundScheduler()
 
 
 def daily_sweep():
-    # find overdue + due-soon tasks, dedupe against notifications table
-    pass
+    # Sprint 2 stub: find overdue + due-soon tasks, dedupe against the
+    # notifications table, and enqueue reminder email/socket notifications.
+    return None
 
 
 def init_scheduler():
-    pass
+    # Sprint 2 stub: scheduler startup is intentionally disabled until
+    # notification persistence and reminder policies are defined.
+    return None

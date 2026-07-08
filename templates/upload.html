@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Transcript | Nudge{% endblock %}
+{% block page_title %}Upload Transcript{% endblock %}
+
+{% block content %}
+<section class="upload-panel">
+    <h1>Create Draft Tasks</h1>
+    <form method="post" enctype="multipart/form-data" class="upload-form">
+        <label>
+            Sample transcript
+            <select name="sample_transcript">
+                <option value="">Choose a sample...</option>
+                {% for sample in sample_transcripts %}
+                <option value="{{ sample }}">{{ sample }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>
+            Meeting title
+            <input type="text" name="title" placeholder="Sprint Review">
+        </label>
+
+        <label>
+            Transcript file
+            <input type="file" name="transcript_file" accept=".txt,text/plain">
+        </label>
+
+        <label>
+            Transcript text
+            <textarea name="transcript_text" rows="12"></textarea>
+        </label>
+
+        <div class="upload-actions">
+            <button type="submit" class="btn btn-primary">Create drafts</button>
+            <a href="{{ url_for('review.list_drafts') }}" class="btn">Review queue</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

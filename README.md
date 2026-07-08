@@ -32,16 +32,16 @@ nudge/
 ├── app.py                       # Flask app factory + SocketIO init (local dev entrypoint)
 ├── wsgi.py                      # gunicorn/production WSGI entrypoint (imports create_app)
 ├── auth.py                      # flask-login setup, manager_required
-├── models.py                    # SQLite schema stub (root)
-├── extraction.py                # extraction stub (root; superseded by backend/ai/)
-├── integrations.py              # calendar invites, .ics, task + reminder emails
-├── rtms.py                      # Zoom RTMS WebSocket handlers
-├── sockets.py                   # SocketIO events pushing transcript to browser
-├── scheduler.py                 # daily overdue / due-soon sweep
+├── models.py                    # SQLite schema and seed/demo data
+├── extraction.py                # sample/manual transcript extraction + draft persistence
+├── integrations.py              # Sprint 2 stubs for calendar invites, .ics, task + reminder emails
+├── rtms.py                      # Sprint 2 stub for Zoom RTMS WebSocket handlers
+├── sockets.py                   # Sprint 2 stub for SocketIO transcript streaming
+├── scheduler.py                 # Sprint 2 stub for daily overdue / due-soon sweep
 ├── routes/                      # dashboard, review, upload, api blueprints
 ├── templates/                   # base, login, live, review, manager/employee dashboards (Trello-style board view)
 ├── static/                      # style.css, live.js (SocketIO client)
-├── tests/                       # placeholder unit-test stubs
+├── tests/                       # route, dashboard, auth, draft, extraction persistence tests
 ├── backend/                     # package-style modules (newer layout)
 │   ├── config.py
 │   ├── ai/                      # OpenAI client, prompts, schema, parser, extraction
@@ -85,7 +85,7 @@ Production builds the `Dockerfile` (gunicorn `wsgi:app`, binds `$PORT`) and depl
 ## Tests
 
 ```bash
-pytest                      # 25 tests (pytest.ini collects backend/tests + tests)
+pytest                      # 32 tests (pytest.ini collects backend/tests + tests)
 ```
 
 ## Authentication
@@ -105,7 +105,15 @@ OpenAI API access is key-based rather than OAuth, so it sits outside the "APIs w
 | **Dev B** | Models, routes, Google Calendar integration, and realtime sockets |
 | **Dev C** | Frontend — templates, CSS/JS, dashboard rendering |
 
-Current tests: `backend/tests/test_ai_parser.py` and `backend/tests/test_transcript_loader.py` (Dev A, 19 assertions). Route, integration, and dashboard tests (Dev B / Dev C) are planned but not yet written; the `tests/` directory currently holds placeholder stubs.
+Current tests cover backend AI parser validation, transcript loading, authentication guards, review approvals/edits/rejections, manager and employee dashboard filtering, calendar stub IDs on approval, draft rejection behavior, and the no-Zoom sample transcript path that creates a meeting summary plus draft task rows.
+
+Remaining intentional Sprint 2 stubs:
+
+- `routes/api.py` task mutation, blocker, job status, and notification badge endpoints.
+- `rtms.py` live Zoom RTMS meeting lifecycle handlers.
+- `sockets.py` realtime transcript/client update emission.
+- `scheduler.py` overdue and due-soon notification sweep.
+- `integrations.py` Google Calendar OAuth calls and task/reminder email delivery.
 
 ## Timeline
 
