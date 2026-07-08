@@ -14,7 +14,8 @@
 {% set draft_tasks = draft_tasks | default([
     {
         "id": 1,
-        "owner": "Priya",
+        "owner": "Priya Shah",
+        "assignee_id": 2,
         "priority": "urgent",
         "due_date": "2026-07-10",
         "description": "Finalize pricing page copy",
@@ -23,11 +24,17 @@
     {
         "id": 2,
         "owner": "unassigned",
+        "assignee_id": none,
         "priority": "normal",
         "due_date": "",
         "description": "Investigate flaky checkout test",
         "context": "Team mentioned flaky checkout tests but did not assign an owner."
     }
+]) %}
+{% set users = users | default([
+    {"id": 1, "name": "Maya Chen", "email": "maya@nudge.local"},
+    {"id": 2, "name": "Priya Shah", "email": "priya@nudge.local"},
+    {"id": 3, "name": "Marco Diaz", "email": "marco@nudge.local"}
 ]) %}
 
 <div class="review-layout">
@@ -44,7 +51,10 @@
             <div class="draft-field">
                 <label for="owner-{{ task.id }}">Owner</label>
                 <select id="owner-{{ task.id }}" name="owner">
-                    <option value="{{ task.owner }}" selected>{{ task.owner }}</option>
+                    <option value="">unassigned</option>
+                    {% for user in users %}
+                    <option value="{{ user.email }}" {% if user.id == task.assignee_id %}selected{% endif %}>{{ user.name }}</option>
+                    {% endfor %}
                 </select>
 
                 <label for="priority-{{ task.id }}">Priority</label>

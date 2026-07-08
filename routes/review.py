@@ -25,11 +25,16 @@ def list_drafts():
         ).fetchall()
         draft_tasks = [_task_view_model(row_to_task(row)) for row in draft_rows]
         meeting = _latest_draft_meeting(db)
+        user_rows = db.execute(
+            "SELECT id, name, email FROM users ORDER BY role DESC, name ASC"
+        ).fetchall()
+        users = [dict(row) for row in user_rows]
 
     return render_template(
         "review.html",
         draft_tasks=draft_tasks,
         meeting=meeting,
+        users=users,
     )
 
 
@@ -235,6 +240,7 @@ def _task_view_model(task):
     return {
         "id": task.id,
         "owner": task.owner,
+        "assignee_id": task.assignee_id,
         "priority": task.priority,
         "due_date": task.due_date or "",
         "description": task.description,
