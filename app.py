@@ -1,13 +1,15 @@
 import os
 
 from flask import Flask
-from flask_socketio import SocketIO
 
 from auth import bp as auth_bp
 from auth import login_manager
+from extensions import socketio
 from models import get_db
 
-socketio = SocketIO()
+
+def _is_truthy(value):
+    return str(value).strip().lower() not in {"", "0", "false", "no", "off"}
 
 
 def create_app():
@@ -40,6 +42,13 @@ def create_app():
         socketio.init_app(app, async_mode=async_mode)
     else:
         socketio.init_app(app)
+
+    # Start the daily reminder sweep. Off by default under pytest (which sets
+    # NUDGE_START_SCHEDULER=false) so tests don't spawn a background thread.
+    if _is_truthy(os.environ.get("NUDGE_START_SCHEDULER", "true")):
+        from scheduler import init_scheduler
+
+        init_scheduler()
 
     return app
 

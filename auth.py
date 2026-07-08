@@ -3,7 +3,7 @@ import os
 import secrets
 from functools import wraps
 from datetime import datetime, timedelta, timezone
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import httpx
 from flask import Blueprint, abort, redirect, render_template, request, session, url_for
@@ -48,6 +48,18 @@ def load_user(user_id):
     if user is None:
         return None
     return User(user.id, user.name, user.email, user.role)
+
+
+def _safe_next(target):
+    """Only allow same-site relative redirect targets (block open redirects)."""
+    if not target:
+        return None
+    parsed = urlparse(target)
+    if parsed.scheme or parsed.netloc:
+        return None
+    if not target.startswith("/") or target.startswith("//"):
+        return None
+    return target
 
 
 def manager_required(view_func):
@@ -228,7 +240,8 @@ def login():
         ):
             login_user(User(user.id, user.name, user.email, user.role))
             return redirect(
-                request.args.get("next") or url_for("dashboard.manager_dashboard")
+                _safe_next(request.args.get("next"))
+                or url_for("dashboard.manager_dashboard")
             )
         return render_template("login.html", login_error="Invalid email or password"), 401
 

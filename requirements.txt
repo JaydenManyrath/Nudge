@@ -2,7 +2,7 @@ flask==3.0.3
 flask-socketio==5.3.6
 flask-login==0.6.3
 python-dotenv==1.0.1
-eventlet==0.36.1
+eventlet==0.41.0
 openai==1.35.0
 google-api-python-client==2.134.0
 google-auth-oauthlib==1.2.0

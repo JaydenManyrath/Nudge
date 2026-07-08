@@ -17,6 +17,7 @@ def app(tmp_path, monkeypatch):
     monkeypatch.setattr(models, "DB_PATH", str(db_path))
     monkeypatch.setenv("SOCKETIO_ASYNC_MODE", "threading")
     monkeypatch.setenv("NUDGE_EXTRACTION_BACKEND", "deterministic")
+    monkeypatch.setenv("NUDGE_START_SCHEDULER", "false")
     models.init_db(db_path, seed_demo_data=True)
 
     flask_app = create_app()

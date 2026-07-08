@@ -206,15 +206,24 @@ def init_db(
 
 
 def seed_demo(db: sqlite3.Connection) -> None:
+    from werkzeug.security import generate_password_hash
+
+    # The login flow requires a password_hash; without one the seeded users
+    # could never sign in. Override the demo password with NUDGE_DEMO_PASSWORD.
+    password_hash = generate_password_hash(
+        os.environ.get("NUDGE_DEMO_PASSWORD", "demo1234")
+    )
     users = [
-        ("Maya Chen", "maya@nudge.local", "manager"),
-        ("Priya Shah", "priya@nudge.local", "employee"),
-        ("Marco Diaz", "marco@nudge.local", "employee"),
+        ("Maya Chen", "maya@nudge.local", "manager", password_hash),
+        ("Priya Shah", "priya@nudge.local", "employee", password_hash),
+        ("Marco Diaz", "marco@nudge.local", "employee", password_hash),
     ]
     db.executemany(
         """
-        INSERT OR IGNORE INTO users (name, email, role)
-        VALUES (?, ?, ?)
+        INSERT INTO users (name, email, role, password_hash)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(email) DO UPDATE SET
+            password_hash = excluded.password_hash
         """,
         users,
     )
