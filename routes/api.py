@@ -44,7 +44,7 @@ def add_blocker(task_id):
 
     task_payload = sockets.emit_task_updated(task)
     blocker_payload = sockets.emit_blocker_updated(task, description)
-    comment_payload = sockets.emit_comment_added(task.id, comment)
+    comment_payload = sockets.emit_comment_added(task, comment)
     return jsonify(
         {
             "task": task_payload,
@@ -74,7 +74,7 @@ def resolve_blocker(task_id):
         "blocker": blocker_payload,
     }
     if comment is not None:
-        response["comment"] = sockets.emit_comment_added(task.id, comment)["comment"]
+        response["comment"] = sockets.emit_comment_added(task, comment)["comment"]
     return jsonify(response)
 
 
@@ -113,7 +113,7 @@ def add_comment(task_id):
         comment = _insert_comment(db, task.id, body)
         db.commit()
 
-    payload = sockets.emit_comment_added(task.id, comment)
+    payload = sockets.emit_comment_added(task, comment)
     return jsonify({"comment": payload["comment"]}), 201
 
 

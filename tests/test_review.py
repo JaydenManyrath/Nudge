@@ -21,7 +21,7 @@ def test_approving_a_draft_moves_it_to_pending(client, login_as_user, monkeypatc
     monkeypatch.setattr(
         sockets.socketio,
         "emit",
-        lambda event, data: emitted.append((event, data)),
+        lambda event, data, **kwargs: emitted.append((event, data)),
     )
     login_as_user("maya@nudge.local")
     task_id = _draft_task_id("Finalize pricing page copy")
@@ -63,7 +63,7 @@ def test_editing_a_draft_keeps_it_in_review_queue(client, login_as_user, monkeyp
     monkeypatch.setattr(
         sockets.socketio,
         "emit",
-        lambda event, data: emitted.append((event, data)),
+        lambda event, data, **kwargs: emitted.append((event, data)),
     )
     login_as_user("maya@nudge.local")
     task_id = _draft_task_id("Investigate flaky checkout test")
@@ -105,7 +105,7 @@ def test_rejecting_a_draft_retains_rejected_task(client, login_as_user, monkeypa
     monkeypatch.setattr(
         sockets.socketio,
         "emit",
-        lambda event, data: emitted.append((event, data)),
+        lambda event, data, **kwargs: emitted.append((event, data)),
     )
     login_as_user("maya@nudge.local")
     task_id = _draft_task_id("Investigate flaky checkout test")

@@ -7,7 +7,7 @@ def test_employee_can_mark_own_task_done(client, login_as_user, monkeypatch):
     monkeypatch.setattr(
         sockets.socketio,
         "emit",
-        lambda event, data: emitted.append((event, data)),
+        lambda event, data, **kwargs: emitted.append((event, data)),
     )
     login_as_user("marco@nudge.local")
     task_id = _task_id("Create customer rollout notes")
@@ -48,7 +48,7 @@ def test_comment_is_attached_to_task(client, login_as_user, monkeypatch):
     monkeypatch.setattr(
         sockets.socketio,
         "emit",
-        lambda event, data: emitted.append((event, data)),
+        lambda event, data, **kwargs: emitted.append((event, data)),
     )
     login_as_user("marco@nudge.local")
     task_id = _task_id("Create customer rollout notes")
@@ -80,7 +80,7 @@ def test_employee_can_report_and_manager_can_resolve_blocker(
     monkeypatch.setattr(
         sockets.socketio,
         "emit",
-        lambda event, data: emitted.append((event, data)),
+        lambda event, data, **kwargs: emitted.append((event, data)),
     )
     login_as_user("marco@nudge.local")
     task_id = _task_id("Create customer rollout notes")

@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import date, datetime, timedelta, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -8,14 +9,21 @@ from models import get_db, row_to_task
 
 scheduler = BackgroundScheduler()
 
-DUE_SOON_DAYS = 7
+DEFAULT_DUE_SOON_HOURS = 24
 NOTIFICATION_CHANNEL = "email"
 ACTIVE_STATUSES = ("pending", "blocked")
 
 
+def _due_soon_hours():
+    try:
+        return int(os.environ.get("DUE_SOON_HOURS", DEFAULT_DUE_SOON_HOURS))
+    except (TypeError, ValueError):
+        return DEFAULT_DUE_SOON_HOURS
+
+
 def daily_sweep(today=None):
     today = _coerce_date(today) or date.today()
-    due_soon_until = today + timedelta(days=DUE_SOON_DAYS)
+    due_soon_until = today + timedelta(hours=_due_soon_hours())
     summary = {
         "due_soon": 0,
         "overdue": 0,

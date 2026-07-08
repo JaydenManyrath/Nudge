@@ -151,6 +151,8 @@
     } else if (action === "blocker") {
       var reason = window.prompt("Describe the blocker:");
       if (reason === null) return; // cancelled
+      reason = reason.trim();
+      if (!reason) return; // empty description — backend would reject; don't fake the state
       applyStatus(taskId, "blocked");
       postJson("/api/tasks/" + taskId + "/blockers", { description: reason }).catch(function () {});
     } else if (action === "resolve-blocker") {

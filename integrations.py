@@ -27,7 +27,17 @@ def create_calendar_event_metadata(task, assignee):
             error="missing_due_date",
         )
 
-    token = _latest_google_calendar_token()
+    try:
+        token = _latest_google_calendar_token()
+    except Exception as exc:
+        return _calendar_metadata(
+            status="failed",
+            provider="google",
+            calendar_id=None,
+            event_id=None,
+            html_link=None,
+            error=str(exc),
+        )
     if token is None:
         # Keep the demo/local test path working when Google is not connected.
         event_id = f"stub-calendar-{_task_key(task, assignee)}"
