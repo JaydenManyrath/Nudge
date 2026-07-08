@@ -14,8 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Render injects $PORT at runtime and expects the app to bind to it. The
-# default is only for local `docker run` without -e PORT=....
+# Deployment platforms inject $PORT at runtime and expect the app to bind to it.
+# The default is only for local `docker run` without -e PORT=....
 ENV PORT=10000 \
     PYTHONUNBUFFERED=1 \
     NUDGE_DB_PATH=/var/data/nudge.db

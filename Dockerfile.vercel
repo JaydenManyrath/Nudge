@@ -1,0 +1,47 @@
+# Owner: shared (Vercel container-image deployment)
+#
+# Vercel detects Dockerfile.vercel for OCI container-image functions. This
+# intentionally mirrors the production command from Dockerfile while keeping
+# Vercel-specific behavior isolated from the generic/local Docker path.
+
+FROM python:3.12-slim AS builder
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN python -m venv /opt/venv \
+    && /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+
+FROM python:3.12-slim
+
+ENV PATH="/opt/venv/bin:${PATH}" \
+    PORT=80 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    NUDGE_DB_PATH=/var/data/nudge.db
+
+WORKDIR /app
+
+RUN addgroup --system nudge \
+    && adduser --system --ingroup nudge --home /app nudge \
+    && mkdir -p /var/data \
+    && chown -R nudge:nudge /app /var/data
+
+COPY --from=builder /opt/venv /opt/venv
+COPY --chown=nudge:nudge . .
+
+USER nudge
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\", \"80\")}/healthz', timeout=3).read()"
+
+CMD ["sh", "-c", "python -m scripts.init_db && exec gunicorn --worker-class eventlet -w 1 -b 0.0.0.0:${PORT} wsgi:app"]

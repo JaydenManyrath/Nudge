@@ -70,6 +70,12 @@ def _public_base_url():
     if hostname:
         return f"https://{hostname.strip('/')}"
 
+    vercel_hostname = os.environ.get("VERCEL_PROJECT_PRODUCTION_URL") or os.environ.get(
+        "VERCEL_URL"
+    )
+    if vercel_hostname:
+        return f"https://{vercel_hostname.strip('/')}"
+
     return None
 
 

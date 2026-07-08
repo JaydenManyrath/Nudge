@@ -3,6 +3,7 @@ from dataclasses import replace
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 
+import sockets
 from auth import manager_required
 from integrations import create_calendar_event_metadata
 from models import Task, get_db, row_to_meeting, row_to_task, validate_task
@@ -51,6 +52,7 @@ def approve(task_id):
         _update_task(db, updated)
         db.commit()
 
+    sockets.emit_task_updated(updated)
     flash("Task approved.", "success")
     if sync_error:
         flash(f"Calendar sync failed: {sync_error}. The task was still saved.", "error")
@@ -67,6 +69,7 @@ def edit(task_id):
         _update_task(db, updated)
         db.commit()
 
+    sockets.emit_task_updated(updated)
     flash("Draft task updated.", "success")
     return redirect(url_for("review.list_drafts"))
 
@@ -94,6 +97,7 @@ def reject(task_id):
         _update_task(db, rejected)
         db.commit()
 
+    sockets.emit_task_updated(rejected)
     flash("Draft task rejected.", "info")
     return redirect(url_for("review.list_drafts"))
 

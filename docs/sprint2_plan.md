@@ -40,7 +40,7 @@ Owner: backend, OAuth, integrations
 - Implement Google Calendar OAuth handshake in `auth.py`.
 - Implement event creation in `integrations.py`.
 - Store calendar event metadata on approved tasks.
-- Update `Dockerfile` and environment variables for Render deployment.
+- Update container deployment files and environment variables for Vercel deployment.
 
 ## Dev C Tasks
 
@@ -70,8 +70,9 @@ Configured local callback URLs and scopes:
 - Google callback: `http://localhost:5000/auth/google/callback`
 - Google Calendar scope: `https://www.googleapis.com/auth/calendar.events`
 
-On Render, callback URLs resolve from `RENDER_EXTERNAL_URL` unless
-`PUBLIC_BASE_URL`, `ZOOM_REDIRECT_URI`, or `GOOGLE_REDIRECT_URI` is set.
+On Vercel, callback URLs resolve from `VERCEL_PROJECT_PRODUCTION_URL` or
+`VERCEL_URL` unless `PUBLIC_BASE_URL`, `ZOOM_REDIRECT_URI`, or
+`GOOGLE_REDIRECT_URI` is set.
 
 ## Unit Test Plan
 

@@ -177,12 +177,26 @@ def init_db(
                 UNIQUE (user_id, provider)
             );
 
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                notification_type TEXT NOT NULL
+                    CHECK (notification_type IN ('due_soon', 'overdue')),
+                channel TEXT NOT NULL DEFAULT 'email',
+                metadata TEXT,
+                sent_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (task_id, notification_type, channel)
+            );
+
             CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
             CREATE INDEX IF NOT EXISTS idx_tasks_assignee_id ON tasks(assignee_id);
             CREATE INDEX IF NOT EXISTS idx_tasks_meeting_id ON tasks(meeting_id);
             CREATE INDEX IF NOT EXISTS idx_comments_task_id ON comments(task_id);
             CREATE INDEX IF NOT EXISTS idx_oauth_tokens_provider
                 ON oauth_tokens(provider);
+            CREATE INDEX IF NOT EXISTS idx_notifications_task_type
+                ON notifications(task_id, notification_type);
             """
         )
         _migrate_schema(db)
@@ -526,6 +540,25 @@ def _migrate_schema(db: sqlite3.Connection) -> None:
     }
     if "calendar_event_metadata" not in task_columns:
         db.execute("ALTER TABLE tasks ADD COLUMN calendar_event_metadata TEXT")
+
+    db.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_id INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            notification_type TEXT NOT NULL
+                CHECK (notification_type IN ('due_soon', 'overdue')),
+            channel TEXT NOT NULL DEFAULT 'email',
+            metadata TEXT,
+            sent_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (task_id, notification_type, channel)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_notifications_task_type
+            ON notifications(task_id, notification_type);
+        """
+    )
 
 
 def _user_id_by_email(db: sqlite3.Connection, email: str) -> int | None:

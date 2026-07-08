@@ -5,6 +5,7 @@ from flask_socketio import SocketIO
 
 from auth import bp as auth_bp
 from auth import login_manager
+from models import get_db
 
 socketio = SocketIO()
 
@@ -12,6 +13,12 @@ socketio = SocketIO()
 def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
+
+    @app.get("/healthz")
+    def healthz():
+        with get_db() as db:
+            db.execute("SELECT 1").fetchone()
+        return {"status": "ok"}
 
     login_manager.init_app(app)
 

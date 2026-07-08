@@ -4,6 +4,13 @@ import auth
 import models
 
 
+def test_healthz_reports_ok(client):
+    response = client.get("/healthz")
+
+    assert response.status_code == 200
+    assert response.json == {"status": "ok"}
+
+
 def test_login_required_routes_redirect_when_unauthenticated(client):
     response = client.get("/review/")
 
@@ -96,6 +103,19 @@ def test_zoom_redirect_uri_uses_render_external_url(client, monkeypatch):
         redirect_uri = auth.zoom_redirect_uri()
 
     assert redirect_uri == "https://nudge.onrender.com/auth/zoom/callback"
+
+
+def test_zoom_redirect_uri_uses_vercel_production_url(client, monkeypatch):
+    monkeypatch.delenv("ZOOM_REDIRECT_URI", raising=False)
+    monkeypatch.delenv("PUBLIC_BASE_URL", raising=False)
+    monkeypatch.delenv("RENDER_EXTERNAL_URL", raising=False)
+    monkeypatch.delenv("RENDER_EXTERNAL_HOSTNAME", raising=False)
+    monkeypatch.setenv("VERCEL_PROJECT_PRODUCTION_URL", "nudge.vercel.app")
+
+    with client.application.test_request_context():
+        redirect_uri = auth.zoom_redirect_uri()
+
+    assert redirect_uri == "https://nudge.vercel.app/auth/zoom/callback"
 
 
 def test_google_oauth_connect_redirects_to_google(client, login_as_user, monkeypatch):

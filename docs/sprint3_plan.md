@@ -6,7 +6,7 @@ Sprint theme: Real-time updates, comments, deployment, and edge case handling.
 
 ## Sprint Goal
 
-Finish the collaborative task-tracking experience: real-time SocketIO dashboard updates, task-level comments, reminder scheduling, deployment to Render, and handling for common failure cases.
+Finish the collaborative task-tracking experience: real-time SocketIO dashboard updates, task-level comments, reminder scheduling, deployment to Vercel, and handling for common failure cases.
 
 ## User Stories
 
@@ -15,7 +15,7 @@ Finish the collaborative task-tracking experience: real-time SocketIO dashboard 
 - As a manager or employee, I should be able to comment on a task, so that follow-up discussion stays attached to the assignment.
 - As an employee, I should be able to report a blocker, so that the manager can help resolve it.
 - As a manager, I should see due-soon and overdue alerts, so that delegated tasks do not get forgotten.
-- As a stakeholder, I should be able to access the deployed app on Render, so that the final demo is not limited to one local machine.
+- As a stakeholder, I should be able to access the deployed app on Vercel, so that the final demo is not limited to one local machine.
 
 ## Dev A Tasks
 
@@ -36,8 +36,8 @@ Owner: realtime backend, scheduler, deployment
 - Implement blocker update endpoint in `routes/api.py`.
 - Implement scheduler daily sweep in `scheduler.py`.
 - Deduplicate reminder emails/notifications.
-- Build or finalize Docker deployment using `Dockerfile`.
-- Deploy to Render.
+- Build or finalize Vercel container deployment using `Dockerfile.vercel`.
+- Deploy to Vercel.
 
 ## Dev C Tasks
 
@@ -75,7 +75,7 @@ TODO: Some current test files contain placeholder functions. Replace placeholder
 - Manager can see blocked, due-soon, and overdue tasks.
 - Scheduler avoids duplicate due-soon or overdue reminders.
 - App runs from Docker.
-- App is deployed on Render or has a documented Render deployment command.
+- App is deployed on Vercel or has a documented Vercel deployment command.
 - Demo script covers Zoom/manual transcript, OpenAI/LLM extraction, manager approval, employee dashboard, comments, and calendar sync.
 
 ## Progress Board
@@ -88,7 +88,7 @@ TODO: Some current test files contain placeholder functions. Replace placeholder
 | Done | Comment thread UI | Dev C | `templates/_comment_drawer.html`, dashboard templates |
 | In Progress | Blocker workflow | Dev B / Dev C | `routes/api.py`, dashboard templates (frontend done; backend endpoint pending) |
 | To Do | Scheduler reminders | Dev B | `scheduler.py`, `integrations.py` |
-| To Do | Render deployment | Dev B | `Dockerfile`, Render settings |
+| To Do | Vercel deployment | Dev B | `Dockerfile.vercel`, Vercel project settings |
 | To Do | Edge case demo data | Dev A | sample transcripts, seeded data |
 | Done | Final responsive polish | Dev C | `static/style.css` |
 

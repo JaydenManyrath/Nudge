@@ -2,6 +2,7 @@ import json
 
 import integrations
 import models
+import sockets
 
 
 def test_review_lists_draft_tasks_for_manager(client, login_as_user):
@@ -15,7 +16,13 @@ def test_review_lists_draft_tasks_for_manager(client, login_as_user):
     assert b"Create customer rollout notes" not in response.data
 
 
-def test_approving_a_draft_moves_it_to_pending(client, login_as_user):
+def test_approving_a_draft_moves_it_to_pending(client, login_as_user, monkeypatch):
+    emitted = []
+    monkeypatch.setattr(
+        sockets.socketio,
+        "emit",
+        lambda event, data: emitted.append((event, data)),
+    )
     login_as_user("maya@nudge.local")
     task_id = _draft_task_id("Finalize pricing page copy")
 
@@ -35,9 +42,29 @@ def test_approving_a_draft_moves_it_to_pending(client, login_as_user):
     assert task["description"] == "Finalize pricing page copy for launch"
     assert task["assignee_name"] == "Priya Shah"
     assert task["assignee_id"] is not None
+    assert emitted == [
+        (
+            "task_updated",
+            {
+                "id": task_id,
+                "status": "pending",
+                "priority": "urgent",
+                "due_date": "2026-07-10",
+                "due_date_iso": "2026-07-10",
+                "description": "Finalize pricing page copy for launch",
+                "owner": "Priya Shah",
+            },
+        )
+    ]
 
 
-def test_editing_a_draft_keeps_it_in_review_queue(client, login_as_user):
+def test_editing_a_draft_keeps_it_in_review_queue(client, login_as_user, monkeypatch):
+    emitted = []
+    monkeypatch.setattr(
+        sockets.socketio,
+        "emit",
+        lambda event, data: emitted.append((event, data)),
+    )
     login_as_user("maya@nudge.local")
     task_id = _draft_task_id("Investigate flaky checkout test")
 
@@ -57,9 +84,29 @@ def test_editing_a_draft_keeps_it_in_review_queue(client, login_as_user):
     assert task["description"] == "Assign an owner for the flaky checkout test"
     assert task["assignee_name"] == "unassigned"
     assert task["due_date"] is None
+    assert emitted == [
+        (
+            "task_updated",
+            {
+                "id": task_id,
+                "status": "draft",
+                "priority": "normal",
+                "due_date": "No due date",
+                "due_date_iso": None,
+                "description": "Assign an owner for the flaky checkout test",
+                "owner": "unassigned",
+            },
+        )
+    ]
 
 
-def test_rejecting_a_draft_retains_rejected_task(client, login_as_user):
+def test_rejecting_a_draft_retains_rejected_task(client, login_as_user, monkeypatch):
+    emitted = []
+    monkeypatch.setattr(
+        sockets.socketio,
+        "emit",
+        lambda event, data: emitted.append((event, data)),
+    )
     login_as_user("maya@nudge.local")
     task_id = _draft_task_id("Investigate flaky checkout test")
 
@@ -69,6 +116,20 @@ def test_rejecting_a_draft_retains_rejected_task(client, login_as_user):
     task = _task(task_id)
     assert task is not None
     assert task["status"] == "rejected"
+    assert emitted == [
+        (
+            "task_updated",
+            {
+                "id": task_id,
+                "status": "rejected",
+                "priority": "normal",
+                "due_date": "No due date",
+                "due_date_iso": None,
+                "description": "Investigate flaky checkout test",
+                "owner": "unassigned",
+            },
+        )
+    ]
 
 
 def test_approving_a_draft_stores_created_calendar_metadata(

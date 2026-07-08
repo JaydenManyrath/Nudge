@@ -72,7 +72,7 @@ flowchart LR
         Sockets["sockets.py"]
         Integrations["integrations.py"]
         Scheduler["scheduler.py"]
-        Docker["Dockerfile / Render deploy"]
+        Docker["Dockerfile.vercel / Vercel deploy"]
     end
 
     subgraph DevC["Dev C: Frontend"]
