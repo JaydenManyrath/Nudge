@@ -16,6 +16,65 @@
     {"key": "blocked", "label": "Blocked"},
     {"key": "done", "label": "Done"}
 ] %}
+{% set integrations = integrations | default({
+    "zoom": {"connected": false, "error": none},
+    "calendar": {"connected": true, "error": none}
+}) %}
+{% set sync_error = sync_error | default(none) %}
+
+<section class="integrations" aria-label="Integrations">
+    <div class="integration-card">
+        <div class="integration-info">
+            <span class="integration-name">Zoom RTMS</span>
+            {% if integrations.zoom.connected %}
+            <span class="status-pill status-pill-ok">Connected</span>
+            {% else %}
+            <span class="status-pill status-pill-off">Not connected</span>
+            {% endif %}
+        </div>
+        {% if integrations.zoom.connected %}
+        <a class="btn btn-oauth btn-oauth-connected" href="#">Reconnect Zoom</a>
+        {% else %}
+        <a class="btn btn-oauth" href="#">Connect Zoom</a>
+        {% endif %}
+    </div>
+
+    <div class="integration-card">
+        <div class="integration-info">
+            <span class="integration-name">Google Calendar</span>
+            {% if integrations.calendar.connected %}
+            <span class="status-pill status-pill-ok">Connected</span>
+            {% else %}
+            <span class="status-pill status-pill-off">Not connected</span>
+            {% endif %}
+        </div>
+        {% if integrations.calendar.connected %}
+        <a class="btn btn-oauth btn-oauth-connected" href="#">Reconnect Google</a>
+        {% else %}
+        <a class="btn btn-oauth" href="#">Connect Google Calendar</a>
+        {% endif %}
+    </div>
+</section>
+
+{% if not integrations.zoom.connected %}
+<div class="banner banner-warning" role="alert">
+    Zoom is not connected. Live meeting capture is unavailable — connect Zoom above, or use
+    <a href="{{ url_for('upload.upload_form') if url_for is defined else '#' }}">manual transcript upload</a> as a fallback.
+</div>
+{% endif %}
+{% if not integrations.calendar.connected %}
+<div class="banner banner-warning" role="alert">
+    Google Calendar is not connected. Approved tasks will not create calendar events until you connect it.
+</div>
+{% endif %}
+{% if integrations.calendar.error %}
+<div class="banner banner-error" role="alert">
+    Calendar sync failed: {{ integrations.calendar.error }}. The task was still saved.
+</div>
+{% endif %}
+{% if sync_error %}
+<div class="banner banner-error" role="alert">{{ sync_error }}</div>
+{% endif %}
 
 <section class="metrics-row">
     <div class="metric-tile">Open Tasks: {{ metrics.open }}</div>

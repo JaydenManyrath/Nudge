@@ -1,6 +1,59 @@
 {% extends "base.html" %}
+
+{% block title %}Live Meeting - Nudge{% endblock %}
+{% block page_title %}Live Meeting{% endblock %}
+
 {% block content %}
+{% set zoom_connected = zoom_connected | default(false) %}
+{% set upload_error = upload_error | default(none) %}
+
+{% if not zoom_connected %}
+<div class="banner banner-warning" role="alert">
+    Zoom is not connected, so live capture is off. Paste or upload a transcript below to run the
+    same extraction pipeline.
+</div>
+{% endif %}
+{% if upload_error %}
+<div class="banner banner-error" role="alert">Transcript upload failed: {{ upload_error }}</div>
+{% endif %}
+
+<div class="live-layout">
+    <section class="live-panel">
+        <div class="live-panel-header">
+            <h2>Live Transcript</h2>
+            <span id="live-status" class="status-pill {{ 'status-pill-ok' if zoom_connected else 'status-pill-off' }}">
+                {{ 'Listening' if zoom_connected else 'Not connected' }}
+            </span>
+        </div>
+        <div id="transcript" class="transcript" aria-live="polite">
+            {% if not zoom_connected %}
+            <p class="transcript-empty">No live transcript. Waiting for a Zoom RTMS stream…</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="upload-panel">
+        <h2>Manual Transcript (fallback)</h2>
+        <p class="upload-help">Use this if live capture is unavailable. Paste text or upload a <code>.txt</code> file.</p>
+
+        <form class="upload-form" method="post" enctype="multipart/form-data"
+              action="{{ url_for('upload.upload_transcript') if url_for is defined else '#' }}">
+            <label for="transcript-text">Paste transcript</label>
+            <textarea id="transcript-text" name="transcript_text" rows="10"
+                      placeholder="Speaker 1: Let's finalize the pricing page by Friday..."></textarea>
+
+            <label for="transcript-file">…or upload a file</label>
+            <input id="transcript-file" name="transcript_file" type="file" accept=".txt">
+
+            <div class="upload-actions">
+                <button type="submit" class="btn btn-primary">Extract Tasks</button>
+                <span id="upload-hint" class="upload-hint"></span>
+            </div>
+        </form>
+    </section>
+</div>
 {% endblock %}
+
 {% block scripts %}
 <script src="{{ url_for('static', filename='live.js') }}"></script>
 {% endblock %}
