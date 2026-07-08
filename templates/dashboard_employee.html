@@ -44,6 +44,7 @@
                 <div class="task-card-actions">
                     <button type="button" class="btn btn-link" data-action="done" data-task-id="{{ task.id }}">Mark Done</button>
                     <button type="button" class="btn btn-link" data-action="blocker" data-task-id="{{ task.id }}">Add Blocker</button>
+                    <button type="button" class="btn btn-link" data-action="resolve-blocker" data-task-id="{{ task.id }}" data-only-status="blocked">Resolve Blocker</button>
                     <button type="button" class="btn btn-link" data-action="comments" data-task-id="{{ task.id }}">Comment</button>
                 </div>
             </article>

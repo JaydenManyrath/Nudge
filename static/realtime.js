@@ -175,9 +175,14 @@
     };
   }
 
+  function commentKey(comment) {
+    return [comment.author || "", comment.created_at || "", comment.body || ""].join("");
+  }
+
   function renderComment(comment, unsent) {
     var wrap = document.createElement("div");
     wrap.className = "comment" + (unsent ? " comment-unsent" : "");
+    wrap.dataset.commentKey = commentKey(comment);
     var who = comment.author || "You";
     var role = comment.role ? " (" + comment.role + ")" : "";
     var when = comment.created_at ? " · " + comment.created_at : "";
@@ -207,10 +212,22 @@
 
   function appendComment(comment, unsent) {
     var p = drawerParts();
+    // Dedupe: the author both renders their POST response and receives the
+    // server's comment_added broadcast echo — only show the comment once.
+    if (!unsent) {
+      var key = commentKey(comment);
+      var existing = p.thread.querySelector('.comment[data-comment-key="' + cssEscape(key) + '"]');
+      if (existing) return;
+    }
     var empty = p.thread.querySelector(".comment-drawer-empty");
     if (empty) empty.remove();
     p.thread.appendChild(renderComment(comment, unsent));
     p.thread.scrollTop = p.thread.scrollHeight;
+  }
+
+  function cssEscape(value) {
+    if (window.CSS && window.CSS.escape) return window.CSS.escape(value);
+    return value.replace(/["\\\]\[]/g, "\\$&");
   }
 
   function openDrawer(taskId) {
@@ -252,9 +269,6 @@
     var body = p.input.value.trim();
     if (!body || !taskId) return;
 
-    var optimistic = { author: "You", role: "", body: body, created_at: "just now" };
-    appendComment(optimistic, false);
-    var node = p.thread.lastElementChild;
     p.input.value = "";
     p.hint.textContent = "";
 
@@ -263,8 +277,14 @@
         if (!r.ok) throw new Error("unavailable");
         return r.json();
       })
+      .then(function (data) {
+        // Render from the server's canonical comment (real author/timestamp).
+        // appendComment dedupes, so the comment_added socket echo won't double it.
+        if (data && data.comment) appendComment(data.comment, false);
+      })
       .catch(function () {
-        if (node) node.classList.add("comment-unsent");
+        // Offline / backend unavailable: show the text locally, marked unsent.
+        appendComment({ author: "You", role: "", body: body, created_at: "just now" }, true);
         p.hint.textContent = "Not saved — backend unavailable.";
       });
   }
