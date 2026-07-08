@@ -98,8 +98,8 @@ TODO: Replace TODO names with actual test functions once implemented.
 | To Do | Manual upload fallback | Dev B | `routes/upload.py` |
 | To Do | Google OAuth routes | Dev B | `auth.py` |
 | To Do | Calendar event creation | Dev B | `integrations.py` |
-| To Do | OAuth status UI | Dev C | `templates/dashboard_manager.html` |
-| To Do | Upload UI | Dev C | `templates/live.html` |
+| Done | OAuth status UI | Dev C | `templates/dashboard_manager.html` |
+| Done | Upload UI | Dev C | `templates/live.html` |
 | To Do | Prompt tuning for real transcripts | Dev A | `extraction.py`, `backend/ai/prompts.py` |
 | To Do | Integration boundary tests | Dev B | `tests/test_auth.py`, `tests/test_review.py` |
 
