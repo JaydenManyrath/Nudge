@@ -8,12 +8,12 @@ so the raw response is shaped correctly by construction -- parser.py
 is the actual safety net that validates it before anything touches
 the database.
 
-NOTE ON NAMING: earlier planning docs called this "claude_client.py"
-in the sprint plan. The team decided to stay on OpenAI (matches the
-existing requirements.txt), so this file is named llm_client.py
-instead to avoid a misleading filename. If routes/upload.py or
-extraction.py were written against a "claude_client" import, update
-that import to `from backend.ai.llm_client import call_extraction`.
+NOTE ON NAMING: earlier planning docs used a provider-specific client name.
+The team decided to stay on OpenAI (matches the existing requirements.txt),
+so this file is named llm_client.py instead to avoid a misleading filename.
+If routes/upload.py or extraction.py were written against an older
+provider-specific import, update that import to
+`from backend.ai.llm_client import call_extraction`.
 """
 
 import json

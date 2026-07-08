@@ -14,13 +14,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Render (and most PaaS targets) inject $PORT at runtime and expect the
-# app to bind to it -- do not hardcode a port here. 5000 is just the
-# documented default for local `docker run` without -e PORT=....
-ENV PORT=5000
-EXPOSE 5000
+# Render injects $PORT at runtime and expects the app to bind to it. The
+# default is only for local `docker run` without -e PORT=....
+ENV PORT=10000 \
+    PYTHONUNBUFFERED=1 \
+    NUDGE_DB_PATH=/var/data/nudge.db
+EXPOSE 10000
 
 # wsgi:app (not app:app) -- see wsgi.py for why. Shell form so $PORT
 # actually expands; exec form (a JSON array) would pass the literal
 # string "${PORT}" to gunicorn instead of substituting it.
-CMD gunicorn --worker-class eventlet -w 1 -b 0.0.0.0:${PORT} wsgi:app
+CMD python -m scripts.init_db && gunicorn --worker-class eventlet -w 1 -b 0.0.0.0:${PORT} wsgi:app

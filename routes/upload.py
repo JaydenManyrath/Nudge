@@ -2,7 +2,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, u
 
 from auth import manager_required
 from backend.ingestion.transcript_loader import list_sample_transcripts, load_sample_transcript
-from extraction import ExtractionError, create_draft_tasks_from_transcript
+from extraction import DETERMINISTIC_BACKEND, ExtractionError, create_draft_tasks_from_transcript
 
 bp = Blueprint("upload", __name__, url_prefix="/upload")
 
@@ -19,12 +19,16 @@ def upload_form():
 @bp.route("/", methods=["POST"])
 @manager_required
 def upload_transcript():
-    title, transcript_text = _transcript_from_request()
+    title, transcript_text, extraction_backend = _transcript_from_request()
     if not transcript_text:
         abort(400, "Provide transcript text, a .txt file, or a sample transcript.")
 
     try:
-        result = create_draft_tasks_from_transcript(title, transcript_text)
+        result = create_draft_tasks_from_transcript(
+            title,
+            transcript_text,
+            extraction_backend=extraction_backend,
+        )
     except ExtractionError as exc:
         abort(400, str(exc))
 
@@ -47,7 +51,7 @@ def _transcript_from_request():
             transcript_text = load_sample_transcript(sample_name)
         except FileNotFoundError as exc:
             abort(400, str(exc))
-        return _title_from_filename(sample_name), transcript_text
+        return _title_from_filename(sample_name), transcript_text, DETERMINISTIC_BACKEND
 
     uploaded_file = request.files.get("transcript_file")
     if uploaded_file and uploaded_file.filename:
@@ -58,10 +62,10 @@ def _transcript_from_request():
         title = request.form.get("title", "").strip() or _title_from_filename(
             uploaded_file.filename
         )
-        return title, transcript_text
+        return title, transcript_text, None
 
     title = request.form.get("title", "").strip() or "Pasted Transcript"
-    return title, request.form.get("transcript_text", "")
+    return title, request.form.get("transcript_text", ""), None
 
 
 def _title_from_filename(filename):

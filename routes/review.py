@@ -1,9 +1,10 @@
+import json
 from dataclasses import replace
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 
 from auth import manager_required
-from integrations import create_calendar_invite
+from integrations import create_calendar_event_metadata
 from models import Task, get_db, row_to_meeting, row_to_task, validate_task
 
 bp = Blueprint("review", __name__, url_prefix="/review")
@@ -39,12 +40,14 @@ def approve(task_id):
         task = _get_draft_task(db, task_id)
         updated = _task_from_form(db, task, status="pending")
         _validate_or_abort(updated)
-        try:
-            calendar_event_id = create_calendar_invite(updated, _assignee_for_task(updated))
-            if calendar_event_id:
-                updated = replace(updated, calendar_event_id=calendar_event_id)
-        except Exception as exc:
-            sync_error = str(exc)
+        metadata = create_calendar_event_metadata(updated, _assignee_for_task(updated))
+        if metadata["status"] == "failed":
+            sync_error = metadata["error"]
+        updated = replace(
+            updated,
+            calendar_event_id=metadata["event_id"],
+            calendar_event_metadata=json.dumps(metadata, sort_keys=True),
+        )
         _update_task(db, updated)
         db.commit()
 
@@ -84,6 +87,7 @@ def reject(task_id):
             context=task.context,
             status="rejected",
             calendar_event_id=task.calendar_event_id,
+            calendar_event_metadata=task.calendar_event_metadata,
             created_at=task.created_at,
             updated_at=task.updated_at,
         )
@@ -153,6 +157,7 @@ def _task_from_form(db, task, *, status):
         context=context,
         status=status,
         calendar_event_id=task.calendar_event_id,
+        calendar_event_metadata=task.calendar_event_metadata,
         created_at=task.created_at,
         updated_at=task.updated_at,
     )
@@ -203,6 +208,7 @@ def _update_task(db, task):
             context = ?,
             status = ?,
             calendar_event_id = ?,
+            calendar_event_metadata = ?,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
         """,
@@ -215,6 +221,7 @@ def _update_task(db, task):
             task.context,
             task.status,
             task.calendar_event_id,
+            task.calendar_event_metadata,
             task.id,
         ),
     )

@@ -1,10 +1,10 @@
 from datetime import date, timedelta
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request
 from flask_login import current_user, login_required
 
 from auth import manager_required
-from models import get_db
+from models import get_db, get_oauth_token
 
 bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
@@ -16,6 +16,12 @@ ACTIVE_STATUSES = ("pending", "blocked", "done")
 def manager_dashboard():
     with get_db() as db:
         rows = _active_task_rows(db)
+        zoom_connected = _zoom_connected(db)
+        google_token = get_oauth_token(
+            db,
+            user_id=int(current_user.id),
+            provider="google",
+        )
 
     tasks = [_manager_task_view(row) for row in rows]
     metrics = _manager_metrics(tasks)
@@ -25,10 +31,28 @@ def manager_dashboard():
         tasks=tasks,
         metrics=metrics,
         integrations={
-            "zoom": {"connected": False, "error": None},
-            "calendar": {"connected": False, "error": None},
+            "zoom": {
+                "connected": zoom_connected,
+                "error": request.args.get("zoom_error"),
+            },
+            "calendar": {
+                "connected": google_token is not None,
+                "error": request.args.get("calendar_error"),
+            },
         },
         notification_count=metrics["due_soon"] + metrics["overdue"],
+    )
+
+
+@bp.route("/live")
+@manager_required
+def live_meeting():
+    with get_db() as db:
+        zoom_connected = _zoom_connected(db)
+
+    return render_template(
+        "live.html",
+        zoom_connected=zoom_connected,
     )
 
 
@@ -46,6 +70,17 @@ def employee_dashboard():
         tasks=tasks,
         summary=summary,
         notification_count=summary["due_today"] + summary["blocked"],
+    )
+
+
+def _zoom_connected(db):
+    return (
+        get_oauth_token(
+            db,
+            user_id=int(current_user.id),
+            provider="zoom",
+        )
+        is not None
     )
 
 

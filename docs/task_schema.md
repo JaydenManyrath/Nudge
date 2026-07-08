@@ -4,7 +4,7 @@ This document is the contract between `extraction.py` / `backend/ai/extraction.p
 
 Nudge uses meeting transcripts to produce a meeting summary and a list of draft tasks. These tasks are not final until a manager reviews them in `routes/review.py`.
 
-**Note on model choice:** earlier planning docs referred to "Claude" throughout. The team decided in Sprint 1 to use OpenAI (`backend/ai/llm_client.py`) instead, since that matched the dependencies already in `requirements.txt`. This document uses "the LLM" or "OpenAI" from here on; treat any remaining "Claude" references elsewhere in the repo's docs as stale terminology from before that decision, not a second model in play.
+**Note on model choice:** earlier planning docs used a different provider name. The team decided in Sprint 1 to use OpenAI (`backend/ai/llm_client.py`) instead, since that matched the dependencies already in `requirements.txt`. This document uses "the LLM" or "OpenAI" from here on; treat any remaining older provider references elsewhere in the repo's docs as stale terminology from before that decision, not a second model in play.
 
 **Resolved:** `parser.py` does NOT support a backward-compatible `deadline` alias. The LLM is always prompted (via `backend/ai/prompts.py` and the strict JSON schema in `backend/ai/schema.py`) to emit `due_date` only. A payload using `deadline` instead of `due_date` is treated as malformed and rejected -- see the Malformed Example below, which is exactly this case.
 
@@ -324,5 +324,4 @@ edge cases:
 | `test_sample_transcript_upload_creates_summary_and_draft_task` | Baseline happy path via `sprint_review.txt`. |
 | `test_urgent_priority_sample_produces_an_urgent_task` | `urgent_priority.txt` yields at least one `priority: "urgent"` draft task. |
 | `test_no_deadline_sample_produces_task_without_due_date` | `task_no_deadline.txt` yields a task for the right owner with no `due_date` guessed. |
-
 

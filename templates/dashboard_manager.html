@@ -32,11 +32,14 @@
             <span class="status-pill status-pill-off">Not connected</span>
             {% endif %}
         </div>
-        {% if integrations.zoom.connected %}
-        <a class="btn btn-oauth btn-oauth-connected" href="#">Reconnect Zoom</a>
-        {% else %}
-        <a class="btn btn-oauth" href="#">Connect Zoom</a>
-        {% endif %}
+        <div class="integration-actions">
+            <a class="btn btn-oauth btn-oauth-connected" href="{{ url_for('dashboard.live_meeting') if url_for is defined else '#' }}">Open Live Meeting</a>
+            {% if integrations.zoom.connected %}
+            <a class="btn btn-oauth btn-oauth-connected" href="{{ url_for('auth.zoom_connect') if url_for is defined else '#' }}">Reconnect Zoom</a>
+            {% else %}
+            <a class="btn btn-oauth" href="{{ url_for('auth.zoom_connect') if url_for is defined else '#' }}">Connect Zoom</a>
+            {% endif %}
+        </div>
     </div>
 
     <div class="integration-card">
@@ -49,17 +52,18 @@
             {% endif %}
         </div>
         {% if integrations.calendar.connected %}
-        <a class="btn btn-oauth btn-oauth-connected" href="#">Reconnect Google</a>
+        <a class="btn btn-oauth btn-oauth-connected" href="{{ url_for('auth.google_connect') if url_for is defined else '#' }}">Reconnect Google</a>
         {% else %}
-        <a class="btn btn-oauth" href="#">Connect Google Calendar</a>
+        <a class="btn btn-oauth" href="{{ url_for('auth.google_connect') if url_for is defined else '#' }}">Connect Google Calendar</a>
         {% endif %}
     </div>
 </section>
 
 {% if not integrations.zoom.connected %}
 <div class="banner banner-warning" role="alert">
-    Zoom is not connected. Live meeting capture is unavailable — connect Zoom above, or use
-    <a href="{{ url_for('upload.upload_form') if url_for is defined else '#' }}">manual transcript upload</a> as a fallback.
+    Zoom is not connected. Live meeting capture is unavailable — connect Zoom above, or use the
+    <a href="{{ url_for('dashboard.live_meeting') if url_for is defined else '#' }}">live meeting page</a>
+    to upload a transcript as a fallback.
 </div>
 {% endif %}
 {% if not integrations.calendar.connected %}
@@ -70,6 +74,11 @@
 {% if integrations.calendar.error %}
 <div class="banner banner-error" role="alert">
     Calendar sync failed: {{ integrations.calendar.error }}. The task was still saved.
+</div>
+{% endif %}
+{% if integrations.zoom.error %}
+<div class="banner banner-error" role="alert">
+    Zoom connection failed: {{ integrations.zoom.error }}.
 </div>
 {% endif %}
 {% if sync_error %}

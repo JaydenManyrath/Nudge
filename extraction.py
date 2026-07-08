@@ -7,37 +7,52 @@ from backend.ai.parser import ExtractionValidationError, validate_extraction
 from backend.ingestion.transcript_loader import load_transcript_from_text
 from models import Meeting, Task, get_db, row_to_meeting, row_to_task, validate_meeting, validate_task
 
+DETERMINISTIC_BACKEND = "deterministic"
+OPENAI_BACKEND = "openai"
+_SUPPORTED_BACKENDS = {DETERMINISTIC_BACKEND, OPENAI_BACKEND}
+
 
 class ExtractionError(Exception):
     """Raised when transcript extraction cannot produce valid draft data."""
 
 
-def extract_tasks(transcript_text, job_id=None, meeting_date=None):
+def extract_tasks(transcript_text, job_id=None, *, backend=None, meeting_date=None):
     """
-    Entry point used by manual/sample upload (and, eventually, the RTMS
-    meeting-end handoff).
+    Extracts task candidates using the configured backend.
 
-    Tries the real OpenAI-backed pipeline (backend/ai/extraction.py) first
-    whenever OPENAI_API_KEY is configured -- that's the actual "OpenAI
-    extraction" step demo day depends on. Falls back to a deterministic,
-    network-free regex extractor when:
-      - OPENAI_API_KEY isn't set (local dev / CI without credentials), or
-      - the OpenAI call fails outright (bad key, rate limit, network error,
-        or a response that fails parser validation even after structured
-        output mode)
+    If a backend is explicitly supplied, or NUDGE_EXTRACTION_BACKEND is set,
+    that backend is used. Otherwise the demo path prefers OpenAI when
+    OPENAI_API_KEY is configured and falls back to the deterministic extractor
+    with a warning when OpenAI is unavailable.
+    """
+    selected_backend = _resolve_backend(backend, allow_auto=True)
+    if selected_backend is None:
+        return _extract_tasks_auto(transcript_text, job_id, meeting_date)
+    if selected_backend == OPENAI_BACKEND:
+        return _extract_tasks_with_openai(transcript_text, job_id, meeting_date)
+    return extract_tasks_deterministic(transcript_text, job_id=job_id)
 
-    so a manager uploading a transcript always gets usable draft tasks
-    back, even if OpenAI has a bad moment mid-demo. See
-    docs/task_schema.md#extraction-failure-handling for the user-facing
-    messages this produces.
 
-    Returns:
-        {
-            "summary": str,
-            "tasks": [...],
-            "extraction_method": "openai" | "fallback",
-            "extraction_warning": str | None,
-        }
+def extract_tasks_deterministic(transcript_text, job_id=None):
+    """
+    This is used for sample uploads, local development, and tests that should
+    not require network credentials.
+    """
+    normalized = load_transcript_from_text(transcript_text)
+    if not normalized:
+        raise ExtractionError(f"job_id={job_id}: transcript_text is empty")
+
+    result = _fallback_extract_tasks(normalized, job_id)
+    result["extraction_warning"] = None
+    return result
+
+
+def _extract_tasks_auto(transcript_text, job_id, meeting_date):
+    """
+    OpenAI-first demo path with deterministic fallback.
+
+    Returns extraction_method/extraction_warning metadata so upload and review
+    flows can tell the user when draft tasks came from the offline extractor.
     """
     normalized = load_transcript_from_text(transcript_text)
     if not normalized:
@@ -83,9 +98,17 @@ def _fallback_extract_tasks(normalized, job_id):
     return {**validated, "extraction_method": "fallback"}
 
 
-def create_draft_tasks_from_transcript(title, transcript_text):
+def create_draft_tasks_from_transcript(
+    title,
+    transcript_text,
+    *,
+    source="manual_upload",
+    zoom_meeting_id=None,
+    extraction_backend=None,
+    meeting_date=None,
+):
     """
-    Creates one manual-upload meeting and draft task rows from transcript text.
+    Creates one meeting and draft task rows from transcript text.
 
     Returns {"meeting": Meeting, "tasks": [Task], "extraction": dict}.
     """
@@ -94,7 +117,11 @@ def create_draft_tasks_from_transcript(title, transcript_text):
         raise ExtractionError("transcript_text is empty")
 
     meeting_title = (title or _transcript_heading(normalized) or "Uploaded Transcript").strip()
-    extraction = extract_tasks(normalized)
+    extraction = extract_tasks(
+        normalized,
+        backend=extraction_backend,
+        meeting_date=meeting_date,
+    )
 
     with get_db() as db:
         meeting = Meeting(
@@ -102,7 +129,8 @@ def create_draft_tasks_from_transcript(title, transcript_text):
             title=meeting_title,
             summary=extraction["summary"],
             transcript=normalized,
-            source="manual_upload",
+            source=source,
+            zoom_meeting_id=zoom_meeting_id,
             extraction_status="parsed",
         )
         validate_meeting(meeting)
@@ -190,6 +218,34 @@ def create_draft_tasks_from_transcript(title, transcript_text):
         "extraction_method": extraction["extraction_method"],
         "extraction_warning": extraction["extraction_warning"],
     }
+
+
+def _resolve_backend(backend, *, allow_auto=False):
+    selected = backend or os.environ.get("NUDGE_EXTRACTION_BACKEND")
+    if not selected and allow_auto:
+        return None
+    selected = selected or DETERMINISTIC_BACKEND
+    selected = selected.strip().lower()
+    if selected not in _SUPPORTED_BACKENDS:
+        supported = ", ".join(sorted(_SUPPORTED_BACKENDS))
+        raise ExtractionError(
+            f"Unsupported extraction backend '{selected}'. Expected one of: {supported}."
+        )
+    return selected
+
+
+def _extract_tasks_with_openai(transcript_text, job_id, meeting_date):
+    from backend.ai import extraction as ai_extraction
+
+    try:
+        result = ai_extraction.extract_tasks(
+            transcript_text,
+            job_id=job_id or 0,
+            meeting_date=meeting_date,
+        )
+        return {**result, "extraction_method": "openai", "extraction_warning": None}
+    except OpenAIExtractionError as exc:
+        raise ExtractionError(str(exc)) from exc
 
 
 def _extract_candidate_tasks(transcript_text):

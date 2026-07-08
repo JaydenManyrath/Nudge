@@ -43,7 +43,7 @@ Primary users:
 
 ## Proposed Solution
 
-Nudge captures a Zoom meeting transcript through RTMS or manual upload, sends the transcript to OpenAI, extracts a meeting summary and structured draft tasks, and lets a manager review those tasks before they become real assignments.
+Nudge captures a Zoom meeting transcript through RTMS or manual upload, sends the transcript to OpenAI for LLM extraction, extracts a meeting summary and structured draft tasks, and lets a manager review those tasks before they become real assignments.
 
 Approved tasks are then:
 
@@ -86,4 +86,3 @@ Nudge is successful if the demo can show this complete flow:
 - Managers are responsible for reviewing AI output before employees see final assignments.
 - The team will use OAuth for Zoom and Google Calendar.
 - OpenAI is the LLM used for the final project write-up (decided in Sprint 1; see the model-choice note in `docs/task_schema.md`).
-

@@ -9,5 +9,5 @@ def handle_connect():
 
 
 def emit_transcript_line(line):
-    # Sprint 2 stub: routes/upload.py is the active no-Zoom path for now.
-    return None
+    socketio.emit("transcript_line", line)
+    return line

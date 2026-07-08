@@ -18,6 +18,7 @@ def create_app():
     from routes.api import bp as api_bp
     from routes.dashboard import bp as dashboard_bp
     from routes.review import bp as review_bp
+    from routes.rtms_ingress import bp as rtms_ingress_bp
     from routes.upload import bp as upload_bp
 
     app.register_blueprint(auth_bp)
@@ -25,6 +26,7 @@ def create_app():
     app.register_blueprint(review_bp)
     app.register_blueprint(upload_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(rtms_ingress_bp)
 
     async_mode = os.environ.get("SOCKETIO_ASYNC_MODE")
     if async_mode:

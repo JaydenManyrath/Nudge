@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: nudge
+    runtime: docker
+    plan: starter
+    region: oregon
+    numInstances: 1
+    healthCheckPath: /auth/login
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: NUDGE_DB_PATH
+        value: /var/data/nudge.db
+      - key: NUDGE_SEED_DEMO_DATA
+        value: "true"
+      - key: DUE_SOON_HOURS
+        value: "24"
+      - key: ZOOM_CLIENT_ID
+        sync: false
+      - key: ZOOM_CLIENT_SECRET
+        sync: false
+      - key: ZOOM_SECRET_TOKEN
+        sync: false
+      - key: ZOOM_SCOPES
+        value: meeting:read:meeting_transcript
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_EXTRACTION_MODEL
+        value: gpt-4o-mini
+      - key: NUDGE_EXTRACTION_BACKEND
+        value: openai
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALENDAR_SCOPES
+        value: https://www.googleapis.com/auth/calendar.events
+      - key: SENDGRID_API_KEY
+        sync: false
+    disk:
+      name: nudge-data
+      mountPath: /var/data
+      sizeGB: 1

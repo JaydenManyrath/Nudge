@@ -11,7 +11,7 @@ sequenceDiagram
     participant Upload as Manual Upload
     participant RTMS as rtms.py
     participant Extract as extraction.py
-    participant LLM as OpenAI API
+    participant OpenAI as OpenAI API
     participant Parser as parser.py validation
     participant DB as SQLite via SQLAlchemy
     participant Review as routes/review.py
@@ -28,8 +28,8 @@ sequenceDiagram
         Upload->>Extract: Submit uploaded transcript file
     end
 
-    Extract->>LLM: Send transcript and structured extraction prompt
-    LLM-->>Extract: Return meeting summary and draft task JSON
+    Extract->>OpenAI: Send transcript and structured extraction prompt
+    OpenAI-->>Extract: Return meeting summary and draft task JSON
     Extract->>Parser: Validate JSON contract
 
     alt Valid extraction
@@ -57,7 +57,7 @@ flowchart LR
     subgraph DevA["Dev A: AI Extraction Pipeline"]
         Samples["sample transcripts"]
         Extraction["extraction.py"]
-        Prompt["OpenAI prompt"]
+        Prompt["OpenAI/LLM prompt"]
         Parser["parser.py / schema validation"]
         ATests["backend/tests/test_ai_parser.py"]
     end
@@ -83,7 +83,7 @@ flowchart LR
     end
 
     Zoom["Zoom API / RTMS OAuth"]
-    LLM["OpenAI API"]
+    OpenAI["OpenAI API"]
     Google["Google Calendar API OAuth"]
     DB[("SQLite")]
 
@@ -91,8 +91,8 @@ flowchart LR
     Zoom --> RTMS
     RTMS --> Extraction
     Extraction --> Prompt
-    Prompt --> LLM
-    LLM --> Parser
+    Prompt --> OpenAI
+    OpenAI --> Parser
     Parser --> Models
     Models --> DB
 
@@ -128,8 +128,7 @@ TODO: Fill in exact OAuth scopes after the final Zoom and Google app configurati
 ## Data Flow Notes
 
 - Live transcript text can be pushed to the browser while the meeting is active, but only the final transcript should trigger task extraction.
-- OpenAI output must pass parser validation before database writes.
+- OpenAI/LLM output must pass parser validation before database writes.
 - Manager approval is the boundary between "draft AI suggestion" and "real assigned task."
 - Google Calendar sync should happen only after approval.
 - SocketIO should broadcast task changes to manager and employee dashboards after approval, completion, blocker updates, and comments.
-

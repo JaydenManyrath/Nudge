@@ -224,6 +224,14 @@ a {
   gap: 10px;
 }
 
+.integration-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .integration-name {
   font-weight: 600;
 }

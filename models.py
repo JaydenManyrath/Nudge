@@ -13,6 +13,7 @@ MEETING_SOURCES = {"manual_upload", "zoom_rtms"}
 MEETING_STATUSES = {"pending", "parsed", "failed", "reviewed"}
 TASK_PRIORITIES = {"low", "normal", "urgent"}
 TASK_STATUSES = {"draft", "pending", "blocked", "done", "rejected"}
+OAUTH_PROVIDERS = {"zoom", "google"}
 
 
 @dataclass(frozen=True)
@@ -49,6 +50,7 @@ class Task:
     due_date: str | None = None
     context: str | None = None
     calendar_event_id: str | None = None
+    calendar_event_metadata: str | None = None
     created_at: str | None = None
     updated_at: str | None = None
 
@@ -64,6 +66,21 @@ class Comment:
     author_id: int | None
     body: str
     created_at: str | None = None
+
+
+@dataclass(frozen=True)
+class OAuthToken:
+    id: int | None
+    user_id: int
+    provider: str
+    access_token: str
+    refresh_token: str | None = None
+    token_type: str | None = None
+    scope: str | None = None
+    expires_at: str | None = None
+    raw_token: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
 
 
 def get_db(path: str | os.PathLike[str] | None = None) -> sqlite3.Connection:
@@ -130,8 +147,9 @@ def init_db(
                         'blocked',
                         'done',
                         'rejected'
-                    )),
+                )),
                 calendar_event_id TEXT,
+                calendar_event_metadata TEXT,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
@@ -144,12 +162,30 @@ def init_db(
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
+            CREATE TABLE IF NOT EXISTS oauth_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                provider TEXT NOT NULL CHECK (provider IN ('zoom', 'google')),
+                access_token TEXT NOT NULL,
+                refresh_token TEXT,
+                token_type TEXT,
+                scope TEXT,
+                expires_at TEXT,
+                raw_token TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (user_id, provider)
+            );
+
             CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
             CREATE INDEX IF NOT EXISTS idx_tasks_assignee_id ON tasks(assignee_id);
             CREATE INDEX IF NOT EXISTS idx_tasks_meeting_id ON tasks(meeting_id);
             CREATE INDEX IF NOT EXISTS idx_comments_task_id ON comments(task_id);
+            CREATE INDEX IF NOT EXISTS idx_oauth_tokens_provider
+                ON oauth_tokens(provider);
             """
         )
+        _migrate_schema(db)
 
         if seed_demo_data:
             seed_demo(db)
@@ -269,6 +305,11 @@ def row_to_task(row: sqlite3.Row | None) -> Task | None:
         context=row["context"],
         status=row["status"],
         calendar_event_id=row["calendar_event_id"],
+        calendar_event_metadata=(
+            row["calendar_event_metadata"]
+            if "calendar_event_metadata" in row.keys()
+            else None
+        ),
         created_at=row["created_at"],
         updated_at=row["updated_at"],
     )
@@ -283,6 +324,24 @@ def row_to_comment(row: sqlite3.Row | None) -> Comment | None:
         author_id=row["author_id"],
         body=row["body"],
         created_at=row["created_at"],
+    )
+
+
+def row_to_oauth_token(row: sqlite3.Row | None) -> OAuthToken | None:
+    if row is None:
+        return None
+    return OAuthToken(
+        id=row["id"],
+        user_id=row["user_id"],
+        provider=row["provider"],
+        access_token=row["access_token"],
+        refresh_token=row["refresh_token"],
+        token_type=row["token_type"],
+        scope=row["scope"],
+        expires_at=row["expires_at"],
+        raw_token=row["raw_token"],
+        created_at=row["created_at"],
+        updated_at=row["updated_at"],
     )
 
 
@@ -314,6 +373,72 @@ def validate_comment(comment: Comment) -> None:
     if comment.task_id is None:
         raise ValueError("Comment.task_id is required")
     _require_text(comment.body, "Comment.body")
+
+
+def validate_oauth_token(token: OAuthToken) -> None:
+    if token.user_id is None:
+        raise ValueError("OAuthToken.user_id is required")
+    _require_choice(token.provider, OAUTH_PROVIDERS, "OAuthToken.provider")
+    _require_text(token.access_token, "OAuthToken.access_token")
+
+
+def get_oauth_token(
+    db: sqlite3.Connection,
+    *,
+    user_id: int,
+    provider: str,
+) -> OAuthToken | None:
+    row = db.execute(
+        """
+        SELECT *
+        FROM oauth_tokens
+        WHERE user_id = ?
+          AND provider = ?
+        """,
+        (user_id, provider),
+    ).fetchone()
+    return row_to_oauth_token(row)
+
+
+def upsert_oauth_token(db: sqlite3.Connection, token: OAuthToken) -> int:
+    validate_oauth_token(token)
+    cursor = db.execute(
+        """
+        INSERT INTO oauth_tokens (
+            user_id,
+            provider,
+            access_token,
+            refresh_token,
+            token_type,
+            scope,
+            expires_at,
+            raw_token
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(user_id, provider) DO UPDATE SET
+            access_token = excluded.access_token,
+            refresh_token = excluded.refresh_token,
+            token_type = excluded.token_type,
+            scope = excluded.scope,
+            expires_at = excluded.expires_at,
+            raw_token = excluded.raw_token,
+            updated_at = CURRENT_TIMESTAMP
+        """,
+        (
+            token.user_id,
+            token.provider,
+            token.access_token,
+            token.refresh_token,
+            token.token_type,
+            token.scope,
+            token.expires_at,
+            token.raw_token,
+        ),
+    )
+    if cursor.lastrowid:
+        return int(cursor.lastrowid)
+    existing = get_oauth_token(db, user_id=token.user_id, provider=token.provider)
+    return int(existing.id)
 
 
 def _ensure_meeting(db: sqlite3.Connection, meeting: Meeting) -> int:
@@ -374,9 +499,10 @@ def _ensure_task(db: sqlite3.Connection, task: Task) -> int:
             priority,
             context,
             status,
-            calendar_event_id
+            calendar_event_id,
+            calendar_event_metadata
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             task.meeting_id,
@@ -388,9 +514,18 @@ def _ensure_task(db: sqlite3.Connection, task: Task) -> int:
             task.context,
             task.status,
             task.calendar_event_id,
+            task.calendar_event_metadata,
         ),
     )
     return int(cursor.lastrowid)
+
+
+def _migrate_schema(db: sqlite3.Connection) -> None:
+    task_columns = {
+        row["name"] for row in db.execute("PRAGMA table_info(tasks)").fetchall()
+    }
+    if "calendar_event_metadata" not in task_columns:
+        db.execute("ALTER TABLE tasks ADD COLUMN calendar_event_metadata TEXT")
 
 
 def _user_id_by_email(db: sqlite3.Connection, email: str) -> int | None:
