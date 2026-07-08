@@ -29,11 +29,14 @@ def upload_transcript():
         abort(400, str(exc))
 
     task_count = len(result["tasks"])
+    method_label = "OpenAI" if result["extraction_method"] == "openai" else "the offline demo extractor"
     flash(
         f"Created {task_count} draft task{'s' if task_count != 1 else ''} "
-        f"from {result['meeting'].title}.",
+        f"from {result['meeting'].title} using {method_label}.",
         "success",
     )
+    if result["extraction_warning"]:
+        flash(result["extraction_warning"], "error")
     return redirect(url_for("review.list_drafts"))
 
 

@@ -1,5 +1,8 @@
+import os
 import re
 
+from backend.ai.extraction import ExtractionError as OpenAIExtractionError
+from backend.ai.extraction import extract_tasks as openai_extract_tasks
 from backend.ai.parser import ExtractionValidationError, validate_extraction
 from backend.ingestion.transcript_loader import load_transcript_from_text
 from models import Meeting, Task, get_db, row_to_meeting, row_to_task, validate_meeting, validate_task
@@ -9,27 +12,75 @@ class ExtractionError(Exception):
     """Raised when transcript extraction cannot produce valid draft data."""
 
 
-def extract_tasks(transcript_text, job_id=None):
+def extract_tasks(transcript_text, job_id=None, meeting_date=None):
     """
-    Deterministic sample/demo extraction path.
+    Entry point used by manual/sample upload (and, eventually, the RTMS
+    meeting-end handoff).
 
-    The OpenAI-backed extractor under backend/ai/ is still available for the
-    live pipeline, but this root adapter is used by manual/sample upload so
-    local development and tests do not require network credentials.
+    Tries the real OpenAI-backed pipeline (backend/ai/extraction.py) first
+    whenever OPENAI_API_KEY is configured -- that's the actual "OpenAI
+    extraction" step demo day depends on. Falls back to a deterministic,
+    network-free regex extractor when:
+      - OPENAI_API_KEY isn't set (local dev / CI without credentials), or
+      - the OpenAI call fails outright (bad key, rate limit, network error,
+        or a response that fails parser validation even after structured
+        output mode)
+
+    so a manager uploading a transcript always gets usable draft tasks
+    back, even if OpenAI has a bad moment mid-demo. See
+    docs/task_schema.md#extraction-failure-handling for the user-facing
+    messages this produces.
+
+    Returns:
+        {
+            "summary": str,
+            "tasks": [...],
+            "extraction_method": "openai" | "fallback",
+            "extraction_warning": str | None,
+        }
     """
     normalized = load_transcript_from_text(transcript_text)
     if not normalized:
         raise ExtractionError(f"job_id={job_id}: transcript_text is empty")
 
+    if os.environ.get("OPENAI_API_KEY"):
+        try:
+            result = openai_extract_tasks(normalized, job_id=job_id or 0, meeting_date=meeting_date)
+            return {**result, "extraction_method": "openai", "extraction_warning": None}
+        except OpenAIExtractionError as exc:
+            fallback = _fallback_extract_tasks(normalized, job_id)
+            fallback["extraction_warning"] = (
+                f"OpenAI extraction failed ({exc}); showing best-effort draft tasks "
+                "from the offline extractor instead. Please review these carefully "
+                "before approving."
+            )
+            return fallback
+
+    fallback = _fallback_extract_tasks(normalized, job_id)
+    fallback["extraction_warning"] = (
+        "OPENAI_API_KEY is not configured, so draft tasks were produced by the "
+        "offline demo extractor instead of OpenAI."
+    )
+    return fallback
+
+
+def _fallback_extract_tasks(normalized, job_id):
+    """
+    Deterministic sample/demo extraction path. No network calls, so it
+    always runs in CI and local dev without credentials, and doubles as
+    the safety net if the live OpenAI call fails.
+    """
     raw_result = {
         "summary": _build_summary(normalized),
         "tasks": _extract_candidate_tasks(normalized),
     }
 
     try:
-        return validate_extraction(raw_result)
+        validated = validate_extraction(raw_result)
     except ExtractionValidationError as exc:
         raise ExtractionError(f"job_id={job_id}: extraction failed validation: {exc}") from exc
+
+    return {**validated, "extraction_method": "fallback"}
 
 
 def create_draft_tasks_from_transcript(title, transcript_text):
@@ -136,6 +187,8 @@ def create_draft_tasks_from_transcript(title, transcript_text):
         "meeting": saved_meeting,
         "tasks": saved_tasks,
         "extraction": extraction,
+        "extraction_method": extraction["extraction_method"],
+        "extraction_warning": extraction["extraction_warning"],
     }
 
 

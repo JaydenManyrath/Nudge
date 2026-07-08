@@ -109,3 +109,33 @@ Use this file to record daily Scrum updates and sprint planning notes. Keep entr
 
 - [ ] Dev B - Share final `Task` field names and route context objects so Dev C can wire templates to live data.
 
+## Standup: 2026-07-08
+
+**Sprint:** Sprint 3
+
+**Attendees:** Dev A
+
+**Sprint Goal Reminder:** Finish the collaborative task-tracking experience: real-time updates, comments, reminders, deployment, and edge case handling.
+
+### Dev A
+
+- Yesterday: Sprint 2 prompt tuning, `reference_date` hallucination fix, transcript_loader hardening, Docker/wsgi fix (see prior sprint2 notes).
+- Today:
+  - Found that `routes/upload.py` -> root `extraction.py` was never actually calling the OpenAI-backed pipeline in `backend/ai/extraction.py` -- it only ran the deterministic regex extractor, so nothing in the running app exercised OpenAI at all (only `backend/tests` did, directly). Fixed by making `extraction.extract_tasks()` call the real OpenAI pipeline first when `OPENAI_API_KEY` is set, and fall back to the deterministic extractor on missing key or OpenAI failure, with a warning surfaced to the manager either way. See `docs/task_schema.md#extraction-failure-handling-sprint-3-addition`.
+  - Added the two remaining Sprint 3 edge-case sample transcripts: `urgent_priority.txt` (explicit urgency + resolvable near-term deadline) and `task_no_deadline.txt` (real, clearly-owned task with zero timing language). Sprint 2's "multiple tasks assigned to one person" case was already covered by `sprint_review.txt`.
+  - Added `tests/test_extraction_fallback.py` (OpenAI-first/fallback selection logic, monkeypatched, no network) and extended `tests/test_extraction.py` with end-to-end coverage for both new samples. Full suite: 38/38 passing.
+  - Updated `docs/task_schema.md`: filled in the Sprint 3 TODO, added the new samples to the coverage table, documented the fallback-path date-resolution limitation, and added the new tests to the Test Coverage Map.
+- Blockers: `rtms.py` is still a full stub (all three handlers `return None`) -- live Zoom meeting-end handoff to extraction still doesn't exist. Manual upload is therefore still the only real extraction entry point for demo day; team should confirm we're leading the demo with manual upload rather than live RTMS.
+
+### Decisions
+
+- Root `extraction.py` is no longer "deterministic-only" -- it now prefers the real OpenAI pipeline and only falls back to the deterministic extractor when needed. The deterministic path is kept exactly as-is (still credential-free for CI/local dev), just demoted to a fallback rather than the only path.
+
+### Action Items
+
+- [ ] Team - Decide and rehearse whether the demo leads with live RTMS or manual-upload fallback, given RTMS is still fully stubbed.
+- [ ] Dev B - When `rtms.py`'s meeting-end handoff lands, call `backend.ai.extraction.extract_tasks` (or route through root `extraction.extract_tasks`, which now already prefers it) rather than reimplementing extraction dispatch.
+- [x] Dev A - Add remaining Sprint 2/3 edge-case sample transcripts.
+- [x] Dev A - Add extraction failure handling documentation and user-facing error examples.
+
+

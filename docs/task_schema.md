@@ -45,6 +45,14 @@ in as `meeting_date`** rather than relying on the "defaults to today" fallback,
 so relative dates resolve against the actual meeting, not whenever extraction
 happens to run (which matters if a job is retried or processed hours later).
 
+**Note:** this reference-date resolution only applies to the real OpenAI path.
+The deterministic fallback extractor in root `extraction.py` (see Extraction
+Failure Handling below) never attempts to resolve relative language like "by
+Friday" -- it always returns `due_date: null` for every task it finds. This is
+a known, intentional limitation of the offline path: guessing a date without
+an LLM's language understanding is worse than not guessing at all. A manager
+reviewing fallback-extracted drafts should expect to fill in dates by hand.
+
 ## Null-Like String Normalization (Sprint 2 addition)
 
 Even with strict JSON schema mode, the LLM has been observed returning the
@@ -152,8 +160,8 @@ extraction can be exercised without live Zoom RTMS:
 | `standup_no_actions.txt` | No action items at all -- extraction must return an empty `tasks` list, not invent any |
 | `vague_deadline.txt` | Non-committal deadline language ("no rush," "sometime next quarter," "whenever") -- must resolve to `due_date: null`, not a guessed date |
 | `unclear_owner.txt` | A real task is raised but nobody claims it and the conversation moves on -- must resolve to `owner: "unassigned"`, not the last speaker |
-
-TODO (Sprint 3): add a sample with explicit urgency language ("ASAP," "critical") and a sample combining "has a real task" with "no deadline mentioned" as a single case, to directly back the Sprint 3 demo-data requirement (multiple owners, no owner, no deadline, urgent priority all represented).
+| `urgent_priority.txt` | Explicit urgency language ("urgent," "critical," "can't wait until tomorrow") paired with a same-day/next-day deadline -- must resolve to `priority: "urgent"` and a real near-term `due_date`, not `normal` |
+| `task_no_deadline.txt` | A real, clearly-owned task where no timing language is used anywhere in the conversation -- must resolve to `due_date: null` because none was ever stated, distinct from `vague_deadline.txt` where a deadline is raised and dismissed |
 
 ## Malformed Example
 
@@ -184,6 +192,41 @@ Expected validation failures:
 - `context` is missing.
 
 The parser should raise `ExtractionValidationError` with a useful message and the calling code should mark extraction as failed or requiring manual review.
+
+## Extraction Failure Handling (Sprint 3 addition)
+
+There are two different layers of "failure" in this pipeline, and they're handled differently:
+
+1. **A single malformed LLM response** (bad JSON shape, wrong enum value, non-ISO date) -- handled entirely inside `backend/ai/parser.py`. `validate_extraction()` raises `ExtractionValidationError`, which `backend/ai/extraction.py` wraps into its own `ExtractionError`. This is the case covered by the Malformed Example above.
+2. **The OpenAI call itself failing** (missing/invalid API key, rate limit, timeout, network error) -- handled one layer up, in root `extraction.py`.
+
+Root `extraction.py::extract_tasks()` is the actual entry point manual/sample upload calls (`routes/upload.py`), and it now selects between two extraction paths rather than only ever running the deterministic one:
+
+- **If `OPENAI_API_KEY` is configured**, it calls the real pipeline (`backend/ai/extraction.py`, OpenAI + `parser.py` validation) first.
+- **If that call raises `ExtractionError`** (network error, rate limit, bad key, or a response that still fails validation after structured-output mode), `extraction.py` catches it and falls back to the deterministic, network-free regex extractor -- the same one used when no key is configured at all -- so a manager never sees a hard failure mid-demo.
+- **If `OPENAI_API_KEY` isn't set**, it skips straight to the deterministic extractor. This keeps local dev and CI fast and credential-free (see `tests/test_extraction_fallback.py`), while still producing usable draft tasks.
+
+Every call to `extraction.extract_tasks()` returns which path actually ran and why, so the manager-facing upload flow can be honest about it instead of silently swapping extraction quality:
+
+```python
+{
+    "summary": "...",
+    "tasks": [...],
+    "extraction_method": "openai" | "fallback",
+    "extraction_warning": str | None,
+}
+```
+
+`routes/upload.py` flashes this after a successful upload. Concrete user-facing examples:
+
+- **Normal path, everything worked:** `"Created 3 draft tasks from Sprint Review using OpenAI."` (no warning)
+- **No API key configured (expected in local dev):** `"Created 3 draft tasks from Sprint Review using the offline demo extractor."` plus a second flash: `"OPENAI_API_KEY is not configured, so draft tasks were produced by the offline demo extractor instead of OpenAI."`
+- **OpenAI call failed mid-demo (rate limit, bad key, network blip):** `"Created 2 draft tasks from Sprint Review using the offline demo extractor."` plus: `"OpenAI extraction failed (job_id=0: LLM call failed: rate limit exceeded); showing best-effort draft tasks from the offline extractor instead. Please review these carefully before approving."`
+- **Total failure (empty transcript, or both paths produce nothing valid):** the upload route aborts with a 400 and the raw `ExtractionError` message rather than silently creating a meeting with zero tasks.
+
+This means a manager can always still complete the demo flow -- upload, review, approve -- even if OpenAI has a bad moment, at the cost of the offline extractor's lower-quality (but never crashing) output. It also means the fallback extractor is no longer purely a test/CI convenience -- it's the production safety net for a live OpenAI outage.
+
+
 
 ## Mapping To Database Models
 
@@ -260,4 +303,26 @@ text pass through:
 | `test_collapses_runs_of_blank_lines` | Long blank-line runs (e.g. from dropped RTMS chunks) don't bloat the transcript. |
 | `test_strips_leading_and_trailing_whitespace` | Consistent trimming regardless of source. |
 | `test_empty_input_returns_empty_string` | Empty/`None` input doesn't crash the loader. |
+
+`tests/test_extraction_fallback.py` (added Sprint 3) covers the extraction-path
+selection logic in root `extraction.py` -- the OpenAI-first, deterministic-fallback
+behavior described above. Never calls the network; the OpenAI path is monkeypatched.
+
+| Test | Contract behavior |
+| --- | --- |
+| `test_no_api_key_uses_fallback_and_warns` | No `OPENAI_API_KEY` -> deterministic path runs and the warning names the missing key. |
+| `test_openai_success_path_is_used_when_key_present` | Key present + OpenAI succeeds -> its result is returned as-is, `extraction_method == "openai"`, no warning. |
+| `test_openai_failure_falls_back_with_warning` | Key present but OpenAI raises -> deterministic fallback still produces usable tasks, warning names the failure. |
+| `test_empty_transcript_raises_regardless_of_api_key` | Empty input fails the same way regardless of which path would have run. |
+
+`tests/test_extraction.py` (Sprint 1, extended Sprint 3) covers the manual-upload
+route end to end against the sample transcripts, including the two Sprint 3
+edge cases:
+
+| Test | Contract behavior |
+| --- | --- |
+| `test_sample_transcript_upload_creates_summary_and_draft_task` | Baseline happy path via `sprint_review.txt`. |
+| `test_urgent_priority_sample_produces_an_urgent_task` | `urgent_priority.txt` yields at least one `priority: "urgent"` draft task. |
+| `test_no_deadline_sample_produces_task_without_due_date` | `task_no_deadline.txt` yields a task for the right owner with no `due_date` guessed. |
+
 

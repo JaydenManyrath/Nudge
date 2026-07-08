@@ -1,0 +1,13 @@
+[Incident Follow-up — Team Nudge]
+
+Jamie: Quick one before we all scatter. The payment webhook has been silently dropping events since last night.
+Priya: Yeah, I saw the alert. That's bad, we're losing order confirmations.
+Jamie: Priya, can you patch the webhook handler? This is urgent, it's actively losing customer data right now.
+Priya: On it. I'll have a fix out today, this can't wait until tomorrow.
+Jamie: Appreciate it. Sam, once Priya's fix is up, can you backfill the missed events from the queue?
+Sam: Yeah, that's critical too since finance needs those numbers reconciled by end of day tomorrow.
+Sam: I'll start on the backfill script as soon as Priya pushes the fix.
+Jamie: Great, let's treat this as top priority over everything else today.
+Priya: Understood, dropping what I was doing.
+Sam: Same here.
+Jamie: Thanks both, keep me posted.
