@@ -2,7 +2,7 @@ services:
   - type: web
     name: nudge
     runtime: docker
-    plan: starter
+    plan: free
     region: oregon
     numInstances: 1
     healthCheckPath: /auth/login
@@ -11,12 +11,22 @@ services:
         value: "10000"
       - key: SECRET_KEY
         generateValue: true
-      - key: NUDGE_DB_PATH
-        value: /var/data/nudge.db
+      # Free tier has no persistent disk, so SQLite lives in the ephemeral
+      # container filesystem (default ./nudge.db) and re-seeds on each boot.
       - key: NUDGE_SEED_DEMO_DATA
         value: "true"
       - key: DUE_SOON_HOURS
         value: "24"
+      # Keyless by default: the deterministic extractor needs no OpenAI key,
+      # so the app deploys and the full flow works with zero secrets. To use
+      # real OpenAI extraction, set OPENAI_API_KEY below and flip this to
+      # "openai" in the Render dashboard.
+      - key: NUDGE_EXTRACTION_BACKEND
+        value: deterministic
+      - key: OPENAI_EXTRACTION_MODEL
+        value: gpt-4o-mini
+      - key: OPENAI_API_KEY
+        sync: false
       - key: ZOOM_CLIENT_ID
         sync: false
       - key: ZOOM_CLIENT_SECRET
@@ -25,12 +35,6 @@ services:
         sync: false
       - key: ZOOM_SCOPES
         value: meeting:read:meeting_transcript
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: OPENAI_EXTRACTION_MODEL
-        value: gpt-4o-mini
-      - key: NUDGE_EXTRACTION_BACKEND
-        value: openai
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
@@ -39,7 +43,3 @@ services:
         value: https://www.googleapis.com/auth/calendar.events
       - key: SENDGRID_API_KEY
         sync: false
-    disk:
-      name: nudge-data
-      mountPath: /var/data
-      sizeGB: 1
