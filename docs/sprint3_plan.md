@@ -86,16 +86,17 @@ TODO: Some current test files contain placeholder functions. Replace placeholder
 | Done | SocketIO browser client | Dev C | `static/realtime.js`, `static/live.js` |
 | To Do | Comment endpoints | Dev B | `routes/api.py`, `models.py` |
 | Done | Comment thread UI | Dev C | `templates/_comment_drawer.html`, dashboard templates |
-| In Progress | Blocker workflow | Dev B / Dev C | `routes/api.py`, dashboard templates (frontend done; backend endpoint pending) |
+| Done | Blocker workflow | Dev B / Dev C | `routes/api.py`, dashboard templates (backend endpoints implemented; employee + manager resolve-blocker buttons wired) |
 | To Do | Scheduler reminders | Dev B | `scheduler.py`, `integrations.py` |
 | To Do | Vercel deployment | Dev B | `Dockerfile.vercel`, Vercel project settings |
 | To Do | Edge case demo data | Dev A | sample transcripts, seeded data |
 | Done | Final responsive polish | Dev C | `static/style.css` |
 
 Dev C frontend note: the realtime client and comment UI are built against a
-documented contract (see the header of `static/realtime.js`). They stay inert
-until Dev B emits the matching SocketIO events and implements the comment /
-blocker / done endpoints in `routes/api.py` and `sockets.py`.
+documented contract (see the header of `static/realtime.js`). Dev B has now
+implemented the matching endpoints and SocketIO events (`routes/api.py`,
+`sockets.py`), and the done / blocker / resolve / comment flow is verified
+working end-to-end against the running app.
 
 TODO: Update statuses daily during standup.
 
