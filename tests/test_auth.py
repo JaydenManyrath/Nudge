@@ -18,6 +18,27 @@ def test_login_required_routes_redirect_when_unauthenticated(client):
     assert "/auth/login" in response.headers["Location"]
 
 
+def test_dashboard_routes_redirect_when_unauthenticated(client):
+    for path in ("/dashboard/manager", "/dashboard/employee", "/dashboard/live"):
+        response = client.get(path)
+
+        assert response.status_code == 302
+        assert "/auth/login" in response.headers["Location"]
+
+
+def test_task_api_routes_redirect_when_unauthenticated(client):
+    paths = (
+        "/api/tasks/1/comments",
+        "/api/jobs/1/status",
+        "/api/notifications/badge",
+    )
+    for path in paths:
+        response = client.get(path)
+
+        assert response.status_code == 302
+        assert "/auth/login" in response.headers["Location"]
+
+
 def test_zoom_oauth_connect_redirects_to_zoom(client, login_as_user, monkeypatch):
     login_as_user("andrew@nudge.local")
     monkeypatch.setenv("ZOOM_CLIENT_ID", "zoom-client")

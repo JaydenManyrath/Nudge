@@ -133,11 +133,13 @@ def add_comment(task_id):
 
 
 @bp.route("/jobs/<int:job_id>/status")
+@login_required
 def job_status(job_id):
     abort(501, SPRINT_2_STUB_MESSAGE)
 
 
 @bp.route("/notifications/badge")
+@login_required
 def notification_badge():
     abort(501, SPRINT_2_STUB_MESSAGE)
 

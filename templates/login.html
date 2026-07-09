@@ -5,23 +5,11 @@
 
 {% block content %}
 {% set login_error = login_error | default(none) %}
-{% set demo_enabled = demo_enabled | default(false) %}
 
 <div class="auth-card">
     <h1>Sign in to Nudge</h1>
     {% if login_error %}
     <div class="banner banner-error" role="alert">{{ login_error }}</div>
-    {% endif %}
-
-    {% if demo_enabled %}
-    <div class="demo-access">
-        <p class="demo-access-label">Try it instantly, no password needed:</p>
-        <div class="demo-access-buttons">
-            <a class="btn btn-primary" href="{{ url_for('auth.demo_login', role='manager') }}">Enter as Manager</a>
-            <a class="btn" href="{{ url_for('auth.demo_login', role='employee') }}">Enter as Employee</a>
-        </div>
-        <p class="demo-access-note">or sign in with an account below</p>
-    </div>
     {% endif %}
 
     <form class="auth-form" method="post"

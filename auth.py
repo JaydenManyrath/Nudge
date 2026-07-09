@@ -228,19 +228,6 @@ def _store_google_token(user_id, token_data):
         upsert_oauth_token(db, token)
 
 
-def _demo_enabled():
-    return os.environ.get("NUDGE_DEMO_MODE", "").strip().lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }
-
-
-# One-click demo accounts (no password) — only reachable when NUDGE_DEMO_MODE is on.
-DEMO_ACCOUNTS = {"manager": "andrew@nudge.local", "employee": "jayden@nudge.local"}
-
-
 @bp.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -268,12 +255,11 @@ def login():
             render_template(
                 "login.html",
                 login_error="Invalid email or password",
-                demo_enabled=_demo_enabled(),
             ),
             401,
         )
 
-    return render_template("login.html", demo_enabled=_demo_enabled())
+    return render_template("login.html")
 
 
 @bp.route("/logout")
@@ -326,26 +312,6 @@ def signup():
         row = db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     user = row_to_user(row)
     login_user(User(user.id, user.name, user.email, user.role))
-    return redirect(url_for("dashboard.employee_dashboard"))
-
-
-@bp.route("/demo/<role>")
-def demo_login(role):
-    # Passwordless one-click access for demos. Gated by NUDGE_DEMO_MODE so it
-    # is unavailable unless explicitly enabled. Real login + RBAC still apply.
-    if not _demo_enabled():
-        abort(404)
-    email = DEMO_ACCOUNTS.get(role)
-    if email is None:
-        abort(404)
-    with get_db() as db:
-        row = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-    user = row_to_user(row)
-    if user is None:
-        abort(404)
-    login_user(User(user.id, user.name, user.email, user.role))
-    if user.role == "manager":
-        return redirect(url_for("dashboard.manager_dashboard"))
     return redirect(url_for("dashboard.employee_dashboard"))
 
 
