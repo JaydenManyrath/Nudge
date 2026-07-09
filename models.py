@@ -9,7 +9,7 @@ from typing import Any, Iterable
 DB_PATH = os.environ.get("NUDGE_DB_PATH", "nudge.db")
 
 USER_ROLES = {"manager", "employee"}
-MEETING_SOURCES = {"manual_upload", "zoom_rtms"}
+MEETING_SOURCES = {"manual_upload", "zoom_rtms", "zoom_cloud_recording"}
 MEETING_STATUSES = {"pending", "parsed", "failed", "reviewed"}
 TASK_PRIORITIES = {"low", "normal", "urgent"}
 TASK_STATUSES = {"draft", "pending", "blocked", "done", "rejected"}
@@ -118,7 +118,11 @@ def init_db(
                 summary TEXT,
                 transcript TEXT,
                 source TEXT NOT NULL DEFAULT 'manual_upload'
-                    CHECK (source IN ('manual_upload', 'zoom_rtms')),
+                    CHECK (source IN (
+                        'manual_upload',
+                        'zoom_rtms',
+                        'zoom_cloud_recording'
+                    )),
                 zoom_meeting_id TEXT,
                 extraction_status TEXT NOT NULL DEFAULT 'pending'
                     CHECK (extraction_status IN (
@@ -580,6 +584,68 @@ def _migrate_schema(db: sqlite3.Connection) -> None:
     }
     if "calendar_event_metadata" not in task_columns:
         db.execute("ALTER TABLE tasks ADD COLUMN calendar_event_metadata TEXT")
+
+    meeting_table = db.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'meetings'"
+    ).fetchone()
+    if (
+        meeting_table
+        and meeting_table["sql"]
+        and "zoom_cloud_recording" not in meeting_table["sql"]
+    ):
+        db.executescript(
+            """
+            PRAGMA foreign_keys = OFF;
+
+            CREATE TABLE meetings_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                summary TEXT,
+                transcript TEXT,
+                source TEXT NOT NULL DEFAULT 'manual_upload'
+                    CHECK (source IN (
+                        'manual_upload',
+                        'zoom_rtms',
+                        'zoom_cloud_recording'
+                    )),
+                zoom_meeting_id TEXT,
+                extraction_status TEXT NOT NULL DEFAULT 'pending'
+                    CHECK (extraction_status IN (
+                        'pending',
+                        'parsed',
+                        'failed',
+                        'reviewed'
+                    )),
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+
+            INSERT INTO meetings_new (
+                id,
+                title,
+                summary,
+                transcript,
+                source,
+                zoom_meeting_id,
+                extraction_status,
+                created_at
+            )
+            SELECT
+                id,
+                title,
+                summary,
+                transcript,
+                source,
+                zoom_meeting_id,
+                extraction_status,
+                created_at
+            FROM meetings;
+
+            DROP TABLE meetings;
+            ALTER TABLE meetings_new RENAME TO meetings;
+
+            PRAGMA foreign_keys = ON;
+            """
+        )
 
     db.executescript(
         """

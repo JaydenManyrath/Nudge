@@ -5,13 +5,18 @@
 
 {% block content %}
 {% set zoom_connected = zoom_connected | default(false) %}
+{% set zoom_transcript = zoom_transcript | default(none) %}
+{% set zoom_error = zoom_error | default(none) %}
+{% set zoom_transcript_too_large = zoom_transcript_too_large | default(false) %}
+{% set zoom_transcript_max_kb = zoom_transcript_max_kb | default(50) %}
 {% set upload_error = upload_error | default(none) %}
 
 {% if not zoom_connected %}
 <div class="banner banner-warning" role="alert">
-    Zoom is not connected, so live capture is off. Paste or upload a transcript below to run the
-    same extraction pipeline.
+    Zoom is not connected. Connect Zoom to pull your latest cloud recording transcript, or paste a transcript below.
 </div>
+{% elif zoom_error %}
+<div class="banner banner-warning" role="alert">{{ zoom_error }}</div>
 {% endif %}
 {% if upload_error %}
 <div class="banner banner-error" role="alert">Transcript upload failed: {{ upload_error }}</div>
@@ -25,9 +30,38 @@
                 {{ 'Listening' if zoom_connected else 'Not connected' }}
             </span>
         </div>
+        {% if zoom_transcript %}
+        <div class="recording-meta">
+            <strong>{{ zoom_transcript.title }}</strong>
+            {% if zoom_transcript.meeting_date %}
+            <span>{{ zoom_transcript.meeting_date }}</span>
+            {% endif %}
+        </div>
+        {% endif %}
         <div id="transcript" class="transcript" aria-live="polite">
-            {% if not zoom_connected %}
-            <p class="transcript-empty">No live transcript. Waiting for a Zoom RTMS stream…</p>
+            {% if zoom_transcript %}
+            {% for line in zoom_transcript.transcript_text.splitlines() %}
+            <p class="transcript-line">{{ line }}</p>
+            {% endfor %}
+            {% elif zoom_connected %}
+            <p class="transcript-empty">No recent cloud recording transcript is ready.</p>
+            {% else %}
+            <p class="transcript-empty">No Zoom transcript is available.</p>
+            {% endif %}
+        </div>
+        <div class="recording-actions">
+            {% if zoom_transcript and not zoom_transcript_too_large %}
+            <form method="post" action="{{ url_for('dashboard.import_live_meeting') if url_for is defined else '#' }}">
+                <input type="hidden" name="transcript_hash" value="{{ zoom_transcript.transcript_hash }}">
+                <button type="submit" class="btn btn-primary">Import to Review</button>
+            </form>
+            {% elif zoom_transcript_too_large %}
+            <button type="button" class="btn btn-primary" disabled>Import to Review</button>
+            <span class="upload-hint upload-hint-error">Transcript is larger than {{ zoom_transcript_max_kb }} KB. Use manual upload.</span>
+            {% elif zoom_connected %}
+            <a class="btn" href="{{ url_for('auth.zoom_connect') if url_for is defined else '#' }}">Reconnect Zoom</a>
+            {% else %}
+            <a class="btn btn-primary" href="{{ url_for('auth.zoom_connect') if url_for is defined else '#' }}">Connect Zoom</a>
             {% endif %}
         </div>
     </section>
