@@ -49,6 +49,8 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      - key: GOOGLE_REDIRECT_URI
+        value: https://nudge-xp6f.onrender.com/auth/google/callback
       - key: GOOGLE_CALENDAR_SCOPES
         value: https://www.googleapis.com/auth/calendar.events
       - key: SENDGRID_API_KEY
