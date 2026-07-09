@@ -1,6 +1,7 @@
 import os
 
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, render_template, url_for
+from flask_login import current_user
 
 from auth import bp as auth_bp
 from auth import login_manager
@@ -10,6 +11,15 @@ from models import get_db
 
 def _is_truthy(value):
     return str(value).strip().lower() not in {"", "0", "false", "no", "off"}
+
+
+def _error_home():
+    # A safe "get me out of here" destination based on who is signed in.
+    if getattr(current_user, "is_authenticated", False):
+        if getattr(current_user, "role", None) == "manager":
+            return url_for("dashboard.manager_dashboard"), "Back to dashboard"
+        return url_for("dashboard.employee_dashboard"), "Back to my tasks"
+    return url_for("auth.login"), "Go to sign in"
 
 
 def create_app():
@@ -26,6 +36,51 @@ def create_app():
         with get_db() as db:
             db.execute("SELECT 1").fetchone()
         return {"status": "ok"}
+
+    @app.errorhandler(403)
+    def forbidden(error):
+        home_url, home_label = _error_home()
+        return (
+            render_template(
+                "error.html",
+                code=403,
+                title="Access denied",
+                message="You do not have permission to view that page. Some pages are limited to managers.",
+                home_url=home_url,
+                home_label=home_label,
+            ),
+            403,
+        )
+
+    @app.errorhandler(404)
+    def not_found(error):
+        home_url, home_label = _error_home()
+        return (
+            render_template(
+                "error.html",
+                code=404,
+                title="Page not found",
+                message="We could not find the page you were looking for.",
+                home_url=home_url,
+                home_label=home_label,
+            ),
+            404,
+        )
+
+    @app.errorhandler(500)
+    def server_error(error):
+        home_url, home_label = _error_home()
+        return (
+            render_template(
+                "error.html",
+                code=500,
+                title="Something went wrong",
+                message="An unexpected error occurred on our end. Please try again.",
+                home_url=home_url,
+                home_label=home_label,
+            ),
+            500,
+        )
 
     login_manager.init_app(app)
 

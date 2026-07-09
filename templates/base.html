@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,22 +8,43 @@
 </head>
 <body>
     <header class="topnav">
-        <div class="topnav-brand">Nudge</div>
-        <div class="topnav-page">{% block page_title %}{% endblock %}</div>
-        <div class="topnav-actions">
-            <span class="notif-badge">Notifications ({{ notification_count | default(0) }})</span>
-            {% if current_user %}
-            <span class="topnav-user">{{ current_user.name }} &middot; {{ current_user.role }}</span>
-            {% endif %}
-            <a class="topnav-logout" href="{{ url_for('auth.logout') if url_for is defined else '#' }}">Logout</a>
+        <div class="topnav-left">
+            <a class="brand" href="/">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12.5l4.5 4.5L19 7"></path>
+                    </svg>
+                </span>
+                <span class="brand-name">Nudge</span>
+            </a>
+            <span class="crumb">{% block page_title %}{% endblock %}</span>
         </div>
+        {% if current_user and current_user.is_authenticated %}
+        <div class="topnav-actions">
+            <span class="notif-badge" title="Notifications">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span>{{ notification_count | default(0) }}</span>
+            </span>
+            <span class="user-chip">
+                <span class="user-avatar" aria-hidden="true">{{ current_user.name[0] | upper }}</span>
+                <span class="user-meta">
+                    <span class="user-name">{{ current_user.name }}</span>
+                    <span class="user-role">{{ current_user.role }}</span>
+                </span>
+            </span>
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('auth.logout') if url_for is defined else '#' }}">Log out</a>
+        </div>
+        {% endif %}
     </header>
 
     {% with messages = get_flashed_messages(with_categories=true) if get_flashed_messages is defined else [] %}
         {% if messages %}
         <div class="flash-region">
             {% for category, message in messages %}
-            <div class="flash flash-{{ category }}">{{ message }}</div>
+            <div class="banner banner-{{ 'error' if category == 'error' else 'success' }}">{{ message }}</div>
             {% endfor %}
         </div>
         {% endif %}

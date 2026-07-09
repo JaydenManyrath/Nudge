@@ -45,7 +45,7 @@
         }
       });
     } catch (err) {
-      // SocketIO present but server unreachable — leave the manual path usable.
+      // SocketIO present but server unreachable - leave the manual path usable.
     }
   }
 

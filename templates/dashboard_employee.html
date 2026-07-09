@@ -16,9 +16,9 @@
 ] %}
 
 <section class="metrics-row">
-    <div class="metric-tile">Due Today: {{ summary.due_today }}</div>
-    <div class="metric-tile">Due This Week: {{ summary.due_this_week }}</div>
-    <div class="metric-tile metric-tile-blocked">Blocked: {{ summary.blocked }}</div>
+    <div class="stat"><span class="stat-num">{{ summary.due_today }}</span><span class="stat-label">Due today</span></div>
+    <div class="stat"><span class="stat-num">{{ summary.due_this_week }}</span><span class="stat-label">Due this week</span></div>
+    <div class="stat stat-blocked"><span class="stat-num">{{ summary.blocked }}</span><span class="stat-label">Blocked</span></div>
 </section>
 
 <div class="board" id="board">

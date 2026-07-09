@@ -25,7 +25,7 @@
 <section class="integrations" aria-label="Integrations">
     <div class="integration-card">
         <div class="integration-info">
-            <span class="integration-name">Zoom RTMS</span>
+            <span class="integration-name">Zoom</span>
             {% if integrations.zoom.connected %}
             <span class="status-pill status-pill-ok">Connected</span>
             {% else %}
@@ -33,11 +33,17 @@
             {% endif %}
         </div>
         <div class="integration-actions">
-            <a class="btn btn-oauth btn-oauth-connected" href="{{ url_for('dashboard.live_meeting') if url_for is defined else '#' }}">Open Live Meeting</a>
+            <a class="btn btn-primary btn-live" href="{{ url_for('dashboard.live_meeting') if url_for is defined else '#' }}">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M23 7l-7 5 7 5V7z"></path>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
+                Open Live Meeting
+            </a>
             {% if integrations.zoom.connected %}
-            <a class="btn btn-oauth btn-oauth-connected" href="{{ url_for('auth.zoom_connect') if url_for is defined else '#' }}">Reconnect Zoom</a>
+            <a class="btn btn-sm" href="{{ url_for('auth.zoom_connect') if url_for is defined else '#' }}">Reconnect</a>
             {% else %}
-            <a class="btn btn-oauth" href="{{ url_for('auth.zoom_connect') if url_for is defined else '#' }}">Connect Zoom</a>
+            <a class="btn btn-sm" href="{{ url_for('auth.zoom_connect') if url_for is defined else '#' }}">Connect Zoom</a>
             {% endif %}
         </div>
     </div>
@@ -61,7 +67,7 @@
 
 {% if not integrations.zoom.connected %}
 <div class="banner banner-warning" role="alert">
-    Zoom is not connected. Live meeting capture is unavailable — connect Zoom above, or use the
+    Zoom is not connected. Live meeting capture is unavailable. Connect Zoom above, or use the
     <a href="{{ url_for('dashboard.live_meeting') if url_for is defined else '#' }}">live meeting page</a>
     to upload a transcript as a fallback.
 </div>
@@ -86,10 +92,10 @@
 {% endif %}
 
 <section class="metrics-row">
-    <div class="metric-tile">Open Tasks: {{ metrics.open }}</div>
-    <div class="metric-tile">Due Soon: {{ metrics.due_soon }}</div>
-    <div class="metric-tile metric-tile-blocked">Blocked: {{ metrics.blocked }}</div>
-    <div class="metric-tile metric-tile-overdue">Overdue: {{ metrics.overdue }}</div>
+    <div class="stat"><span class="stat-num">{{ metrics.open }}</span><span class="stat-label">Open</span></div>
+    <div class="stat"><span class="stat-num">{{ metrics.due_soon }}</span><span class="stat-label">Due soon</span></div>
+    <div class="stat stat-blocked"><span class="stat-num">{{ metrics.blocked }}</span><span class="stat-label">Blocked</span></div>
+    <div class="stat stat-overdue"><span class="stat-num">{{ metrics.overdue }}</span><span class="stat-label">Overdue</span></div>
 </section>
 
 <section class="filters-row">

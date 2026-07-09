@@ -48,9 +48,9 @@ def test_manager_dashboard_shows_zoom_connected_when_token_exists(
     response = client.get("/dashboard/manager")
 
     assert response.status_code == 200
-    assert b"Zoom RTMS" in response.data
+    assert b"Zoom" in response.data
     assert b"Connected" in response.data
-    assert b"Reconnect Zoom" in response.data
+    assert b"Reconnect" in response.data
 
 
 def test_manager_dashboard_shows_google_calendar_connected_when_token_exists(

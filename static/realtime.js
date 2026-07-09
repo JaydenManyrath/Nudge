@@ -3,7 +3,7 @@
 //
 // Handles: SocketIO live updates, task-card visual states (overdue / due soon
 // / blocked / done), the comment thread drawer, and task actions (mark done,
-// add / resolve blocker). Written defensively — every page element and every
+// add / resolve blocker). Written defensively - every page element and every
 // network call is optional, so the board still renders and stays interactive
 // when SocketIO or the backend routes aren't wired yet.
 //
@@ -24,7 +24,7 @@
 //
 // Until those exist the calls fail quietly and the UI updates optimistically,
 // so a demo without the backend still behaves. Event/endpoint names are the
-// single source of truth here — keep them in sync with routes/api.py + sockets.py.
+// single source of truth here - keep them in sync with routes/api.py + sockets.py.
 // ---------------------------------------------------------------------------
 
 (function () {
@@ -152,7 +152,7 @@
       var reason = window.prompt("Describe the blocker:");
       if (reason === null) return; // cancelled
       reason = reason.trim();
-      if (!reason) return; // empty description — backend would reject; don't fake the state
+      if (!reason) return; // empty description - backend would reject; don't fake the state
       applyStatus(taskId, "blocked");
       postJson("/api/tasks/" + taskId + "/blockers", { description: reason }).catch(function () {});
     } else if (action === "resolve-blocker") {
@@ -161,6 +161,82 @@
     } else if (action === "comments") {
       openDrawer(taskId);
     }
+  }
+
+  // ---- drag and drop (move a card to another column) ----
+
+  function handleDrop(taskId, target) {
+    var el = card(taskId);
+    if (!el || !target) return;
+    var current = el.getAttribute("data-status");
+    if (current === target) return;
+
+    if (target === "done") {
+      applyStatus(taskId, "done");
+      postJson("/api/tasks/" + taskId + "/done").catch(function () {});
+    } else if (target === "blocked") {
+      if (current === "done") return; // a done task cannot be blocked
+      var reason = window.prompt("Describe the blocker:");
+      if (reason === null) return;
+      reason = reason.trim();
+      if (!reason) return;
+      applyStatus(taskId, "blocked");
+      postJson("/api/tasks/" + taskId + "/blockers", { description: reason }).catch(function () {});
+    } else if (target === "pending") {
+      if (current !== "blocked") return; // only blocked -> pending is supported
+      applyStatus(taskId, "pending");
+      postJson("/api/tasks/" + taskId + "/blockers/resolve").catch(function () {});
+    }
+  }
+
+  function clearDropTargets() {
+    document.querySelectorAll(".board-column.drag-over").forEach(function (el) {
+      el.classList.remove("drag-over");
+    });
+  }
+
+  function enableDrag() {
+    document.querySelectorAll(".task-card").forEach(function (c) {
+      c.setAttribute("draggable", "true");
+    });
+
+    document.addEventListener("dragstart", function (e) {
+      var c = e.target.closest(".task-card");
+      if (!c || !e.dataTransfer) return;
+      e.dataTransfer.setData("text/plain", c.getAttribute("data-task-id"));
+      e.dataTransfer.effectAllowed = "move";
+      c.classList.add("dragging");
+    });
+
+    document.addEventListener("dragend", function (e) {
+      var c = e.target.closest(".task-card");
+      if (c) c.classList.remove("dragging");
+      clearDropTargets();
+    });
+
+    document.addEventListener("dragover", function (e) {
+      var col = e.target.closest(".board-column");
+      if (!col) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+      if (!col.classList.contains("drag-over")) {
+        clearDropTargets();
+        col.classList.add("drag-over");
+      }
+    });
+
+    document.addEventListener("dragleave", function (e) {
+      var col = e.target.closest(".board-column");
+      if (col && !col.contains(e.relatedTarget)) col.classList.remove("drag-over");
+    });
+
+    document.addEventListener("drop", function (e) {
+      var col = e.target.closest(".board-column");
+      if (!col || !e.dataTransfer) return;
+      e.preventDefault();
+      clearDropTargets();
+      handleDrop(e.dataTransfer.getData("text/plain"), col.getAttribute("data-column"));
+    });
   }
 
   // ---- comment drawer ----
@@ -215,7 +291,7 @@
   function appendComment(comment, unsent) {
     var p = drawerParts();
     // Dedupe: the author both renders their POST response and receives the
-    // server's comment_added broadcast echo — only show the comment once.
+    // server's comment_added broadcast echo - only show the comment once.
     if (!unsent) {
       var key = commentKey(comment);
       var existing = p.thread.querySelector('.comment[data-comment-key="' + cssEscape(key) + '"]');
@@ -287,7 +363,7 @@
       .catch(function () {
         // Offline / backend unavailable: show the text locally, marked unsent.
         appendComment({ author: "You", role: "", body: body, created_at: "just now" }, true);
-        p.hint.textContent = "Not saved — backend unavailable.";
+        p.hint.textContent = "Not saved, backend unavailable.";
       });
   }
 
@@ -345,5 +421,6 @@
     var el = btn.closest(".task-card");
     if (el && el.getAttribute("data-status") !== "blocked") btn.style.display = "none";
   });
+  enableDrag();
   wireSocket();
 })();
