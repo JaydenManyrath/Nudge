@@ -4,7 +4,7 @@ import models
 
 
 def test_sample_transcript_upload_creates_summary_and_draft_task(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
 
     response = client.post(
         "/upload/",
@@ -38,7 +38,7 @@ def test_urgent_priority_sample_produces_an_urgent_task(client, login_as_user):
     """Sprint 3 edge case: explicit urgent/critical language should surface
     at least one urgent-priority draft task, backing the demo-data
     requirement for an urgent-priority example."""
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
 
     response = client.post(
         "/upload/",
@@ -57,7 +57,7 @@ def test_no_deadline_sample_produces_task_without_due_date(client, login_as_user
     """Sprint 3 edge case: a real, clearly-owned task with no timing
     language anywhere should come out with due_date left empty rather
     than a guessed date."""
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
 
     response = client.post(
         "/upload/",
@@ -74,7 +74,7 @@ def test_no_deadline_sample_produces_task_without_due_date(client, login_as_user
 
 
 def test_manager_can_access_manual_upload_fallback(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
 
     response = client.get("/upload/")
 
@@ -84,7 +84,7 @@ def test_manager_can_access_manual_upload_fallback(client, login_as_user):
 
 
 def test_pasted_transcript_upload_creates_manual_upload_draft(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
 
     response = client.post(
         "/upload/",
@@ -105,7 +105,7 @@ def test_pasted_transcript_upload_creates_manual_upload_draft(client, login_as_u
 
 
 def test_uploaded_transcript_file_creates_manual_upload_draft(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
 
     response = client.post(
         "/upload/",
@@ -130,7 +130,7 @@ def test_uploaded_transcript_file_creates_manual_upload_draft(client, login_as_u
 
 
 def test_empty_manual_upload_returns_bad_request(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
 
     response = client.post("/upload/", data={})
 

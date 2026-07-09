@@ -2,7 +2,7 @@ import models
 
 
 def test_rejected_draft_does_not_show_in_review_queue(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     with models.get_db() as db:
         row = db.execute(
             """

@@ -238,7 +238,7 @@ def _demo_enabled():
 
 
 # One-click demo accounts (no password) — only reachable when NUDGE_DEMO_MODE is on.
-DEMO_ACCOUNTS = {"manager": "maya@nudge.local", "employee": "marco@nudge.local"}
+DEMO_ACCOUNTS = {"manager": "andrew@nudge.local", "employee": "jayden@nudge.local"}
 
 
 @bp.route("/login", methods=["GET", "POST"])

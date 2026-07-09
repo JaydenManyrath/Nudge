@@ -17,7 +17,7 @@ def test_vtt_normalization_preserves_speakers_and_removes_cues():
 
 1
 00:00:01.000 --> 00:00:03.000
-<v Priya Shah>I'll send the launch notes by Friday.
+<v Dat Nguyen>I'll send the launch notes by Friday.
 
 2
 00:00:04.000 --> 00:00:05.000
@@ -25,7 +25,7 @@ Maya: Please review the rollout plan.
 """
 
     assert normalize_vtt(raw_vtt) == (
-        "Priya Shah: I'll send the launch notes by Friday.\n"
+        "Dat Nguyen: I'll send the launch notes by Friday.\n"
         "Maya: Please review the rollout plan."
     )
 
@@ -35,7 +35,7 @@ def test_live_meeting_imports_staged_zoom_cloud_transcript(
     login_as_user,
     monkeypatch,
 ):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     _store_zoom_token()
     monkeypatch.setattr(
         dashboard,
@@ -151,7 +151,7 @@ def test_zoom_recording_fetch_refreshes_token_after_401(monkeypatch):
 
 
 def test_live_meeting_shows_disconnected_without_zoom_token(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
 
     response = client.get("/dashboard/live")
 
@@ -162,7 +162,7 @@ def test_live_meeting_shows_disconnected_without_zoom_token(client, login_as_use
 
 
 def test_live_meeting_shows_refresh_failure(client, login_as_user, monkeypatch):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     _store_zoom_token()
     monkeypatch.setattr(
         dashboard,
@@ -179,7 +179,7 @@ def test_live_meeting_shows_refresh_failure(client, login_as_user, monkeypatch):
 
 
 def test_live_meeting_shows_permission_error(client, login_as_user, monkeypatch):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     _store_zoom_token()
     monkeypatch.setattr(
         dashboard,
@@ -197,7 +197,7 @@ def test_live_meeting_shows_permission_error(client, login_as_user, monkeypatch)
 
 
 def test_live_meeting_shows_no_transcript(client, login_as_user, monkeypatch):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     _store_zoom_token()
     monkeypatch.setattr(
         dashboard,
@@ -218,7 +218,7 @@ def test_live_meeting_does_not_stage_large_transcript(
     login_as_user,
     monkeypatch,
 ):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     _store_zoom_token()
     monkeypatch.setattr(
         dashboard,
@@ -240,7 +240,7 @@ def test_live_meeting_does_not_stage_large_transcript(
 
 
 def test_duplicate_zoom_cloud_import_is_blocked(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     fetched_at = datetime.now(timezone.utc).isoformat()
     with client.session_transaction() as session:
         session[dashboard.ZOOM_TRANSCRIPT_SESSION_KEY] = {
@@ -288,7 +288,7 @@ def test_duplicate_zoom_cloud_import_is_blocked(client, login_as_user):
 
 
 def test_expired_staged_zoom_transcript_is_not_imported(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     fetched_at = (datetime.now(timezone.utc) - timedelta(minutes=31)).isoformat()
     with client.session_transaction() as session:
         session[dashboard.ZOOM_TRANSCRIPT_SESSION_KEY] = {
@@ -332,7 +332,7 @@ def _manager_user_id():
     with models.get_db() as db:
         user = db.execute(
             "SELECT id FROM users WHERE email = ?",
-            ("maya@nudge.local",),
+            ("andrew@nudge.local",),
         ).fetchone()
     return user["id"]
 

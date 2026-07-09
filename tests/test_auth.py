@@ -19,7 +19,7 @@ def test_login_required_routes_redirect_when_unauthenticated(client):
 
 
 def test_zoom_oauth_connect_redirects_to_zoom(client, login_as_user, monkeypatch):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     monkeypatch.setenv("ZOOM_CLIENT_ID", "zoom-client")
     monkeypatch.setenv("ZOOM_CLIENT_SECRET", "zoom-secret")
     monkeypatch.setenv(
@@ -46,7 +46,7 @@ def test_zoom_oauth_connect_redirects_to_zoom(client, login_as_user, monkeypatch
 
 
 def test_zoom_oauth_callback_stores_token(client, login_as_user, monkeypatch):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     monkeypatch.setenv("ZOOM_CLIENT_ID", "zoom-client")
     monkeypatch.setenv("ZOOM_CLIENT_SECRET", "zoom-secret")
     monkeypatch.setenv("ZOOM_SCOPES", "cloud_recording:read:content")
@@ -71,7 +71,7 @@ def test_zoom_oauth_callback_stores_token(client, login_as_user, monkeypatch):
     with models.get_db() as db:
         user = db.execute(
             "SELECT id FROM users WHERE email = ?",
-            ("maya@nudge.local",),
+            ("andrew@nudge.local",),
         ).fetchone()
         token = models.get_oauth_token(
             db,
@@ -86,7 +86,7 @@ def test_zoom_oauth_callback_stores_token(client, login_as_user, monkeypatch):
 
 
 def test_zoom_oauth_state_mismatch_is_rejected(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     with client.session_transaction() as session:
         session["zoom_oauth_state"] = "known-state"
 
@@ -119,7 +119,7 @@ def test_zoom_redirect_uri_uses_vercel_production_url(client, monkeypatch):
 
 
 def test_google_oauth_connect_redirects_to_google(client, login_as_user, monkeypatch):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     monkeypatch.setenv("GOOGLE_CLIENT_ID", "google-client")
     monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "google-secret")
     monkeypatch.setenv(
@@ -151,7 +151,7 @@ def test_google_oauth_connect_redirects_to_google(client, login_as_user, monkeyp
 
 
 def test_google_oauth_callback_stores_token(client, login_as_user, monkeypatch):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     monkeypatch.setenv("GOOGLE_CLIENT_ID", "google-client")
     monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "google-secret")
     monkeypatch.setenv(
@@ -179,7 +179,7 @@ def test_google_oauth_callback_stores_token(client, login_as_user, monkeypatch):
     with models.get_db() as db:
         user = db.execute(
             "SELECT id FROM users WHERE email = ?",
-            ("maya@nudge.local",),
+            ("andrew@nudge.local",),
         ).fetchone()
         token = models.get_oauth_token(
             db,
@@ -194,7 +194,7 @@ def test_google_oauth_callback_stores_token(client, login_as_user, monkeypatch):
 
 
 def test_google_oauth_state_mismatch_is_rejected(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     with client.session_transaction() as session:
         session["google_oauth_state"] = "known-state"
 

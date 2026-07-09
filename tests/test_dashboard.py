@@ -4,7 +4,7 @@ import models
 
 
 def test_manager_dashboard_shows_active_tasks_only(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
 
     response = client.get("/dashboard/manager")
 
@@ -15,7 +15,7 @@ def test_manager_dashboard_shows_active_tasks_only(client, login_as_user):
 
 
 def test_employee_dashboard_shows_only_assigned_active_tasks(client, login_as_user):
-    login_as_user("marco@nudge.local")
+    login_as_user("jayden@nudge.local")
 
     response = client.get("/dashboard/employee")
 
@@ -28,11 +28,11 @@ def test_manager_dashboard_shows_zoom_connected_when_token_exists(
     client,
     login_as_user,
 ):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     with models.get_db() as db:
         row = db.execute(
             "SELECT id FROM users WHERE email = ?",
-            ("maya@nudge.local",),
+            ("andrew@nudge.local",),
         ).fetchone()
         models.upsert_oauth_token(
             db,
@@ -57,11 +57,11 @@ def test_manager_dashboard_shows_google_calendar_connected_when_token_exists(
     client,
     login_as_user,
 ):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     with models.get_db() as db:
         row = db.execute(
             "SELECT id FROM users WHERE email = ?",
-            ("maya@nudge.local",),
+            ("andrew@nudge.local",),
         ).fetchone()
         models.upsert_oauth_token(
             db,
@@ -83,7 +83,7 @@ def test_manager_dashboard_shows_google_calendar_connected_when_token_exists(
 
 
 def test_manager_can_access_live_meeting_page(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
 
     response = client.get("/dashboard/live")
 
@@ -93,7 +93,7 @@ def test_manager_can_access_live_meeting_page(client, login_as_user):
 
 
 def test_live_meeting_page_shows_zoom_disconnected_by_default(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
 
     response = client.get("/dashboard/live")
 
@@ -106,11 +106,11 @@ def test_live_meeting_page_shows_zoom_connected_when_token_exists(
     client,
     login_as_user,
 ):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     with models.get_db() as db:
         row = db.execute(
             "SELECT id FROM users WHERE email = ?",
-            ("maya@nudge.local",),
+            ("andrew@nudge.local",),
         ).fetchone()
         models.upsert_oauth_token(
             db,
@@ -131,7 +131,7 @@ def test_live_meeting_page_shows_zoom_connected_when_token_exists(
 
 
 def test_approval_sets_stub_calendar_event_id(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     with models.get_db() as db:
         row = db.execute(
             """
@@ -145,7 +145,7 @@ def test_approval_sets_stub_calendar_event_id(client, login_as_user):
     response = client.post(
         f"/review/{row['id']}/approve",
         data={
-            "owner": "Priya Shah",
+            "owner": "Dat Nguyen",
             "description": "Finalize pricing page copy",
             "due_date": "2026-07-10",
             "priority": "urgent",

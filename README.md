@@ -124,7 +124,7 @@ python app.py               # or: flask --app app run
 ```
 
 Then open http://localhost:5000 and sign in with a seeded account —
-`maya@nudge.local` (manager) or `marco@nudge.local` (employee), password
+`andrew@nudge.local` (manager) or `jayden@nudge.local` (employee), password
 `demo1234` (override with `NUDGE_DEMO_PASSWORD`). Reset a password on an
 existing database with `python -m scripts.set_password <email> <password>`.
 

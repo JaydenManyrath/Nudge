@@ -2,7 +2,7 @@
 
 Usage:
     python -m scripts.set_password <email> <password>
-    python -m scripts.set_password maya@nudge.local demo1234
+    python -m scripts.set_password andrew@nudge.local demo1234
 
 Needed because the login flow requires a password_hash and the app has no
 self-service signup. Also useful to give the seeded demo accounts a known

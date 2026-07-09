@@ -25,11 +25,11 @@ def _received_events(client):
 def test_task_update_scoped_to_owner_and_managers(app):
     """A task update reaches its assignee and managers, but not other employees."""
     mgr_fc = app.test_client()
-    _login(mgr_fc, "maya@nudge.local")
+    _login(mgr_fc, "andrew@nudge.local")
     marco_fc = app.test_client()
-    _login(marco_fc, "marco@nudge.local")
+    _login(marco_fc, "jayden@nudge.local")
     priya_fc = app.test_client()
-    _login(priya_fc, "priya@nudge.local")
+    _login(priya_fc, "dat@nudge.local")
 
     mgr = socketio.test_client(app, flask_test_client=mgr_fc)
     marco = socketio.test_client(app, flask_test_client=marco_fc)

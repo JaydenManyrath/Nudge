@@ -78,7 +78,7 @@ def test_rtms_chunks_create_zoom_meeting_and_draft_tasks(app, monkeypatch):
     assert meeting["extraction_status"] == "parsed"
     assert "Priya: I'll finalize the launch checklist" in meeting["transcript"]
     assert [task["status"] for task in tasks] == ["draft", "draft"]
-    assert {task["assignee_name"] for task in tasks} == {"Priya Shah", "Marco Diaz"}
+    assert {task["assignee_name"] for task in tasks} == {"Priya", "Marco"}
 
 
 def test_rtms_meeting_end_uses_openai_extractor_when_configured(app, monkeypatch):

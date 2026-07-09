@@ -27,7 +27,7 @@ def test_daily_sweep_does_not_double_notify(app, monkeypatch):
         db.execute("DELETE FROM tasks")
         assignee = db.execute(
             "SELECT id FROM users WHERE email = ?",
-            ("marco@nudge.local",),
+            ("jayden@nudge.local",),
         ).fetchone()
         task_ids = [
             _insert_task(
@@ -69,8 +69,8 @@ def test_daily_sweep_does_not_double_notify(app, monkeypatch):
     assert first["sent"] == 2
     assert second["sent"] == 0
     assert sorted(sent) == [
-        (task_ids[0], "marco@nudge.local", "due_soon"),
-        (task_ids[1], "marco@nudge.local", "overdue"),
+        (task_ids[0], "jayden@nudge.local", "due_soon"),
+        (task_ids[1], "jayden@nudge.local", "overdue"),
     ]
 
     with models.get_db() as db:
@@ -112,7 +112,7 @@ def test_daily_sweep_allows_one_reminder_per_stage(app, monkeypatch):
         db.execute("DELETE FROM tasks")
         assignee = db.execute(
             "SELECT id FROM users WHERE email = ?",
-            ("marco@nudge.local",),
+            ("jayden@nudge.local",),
         ).fetchone()
         task_id = _insert_task(
             db,
@@ -135,8 +135,8 @@ def test_daily_sweep_allows_one_reminder_per_stage(app, monkeypatch):
     assert overdue["overdue"] == 1
     assert duplicate_overdue["sent"] == 0
     assert sent == [
-        (task_id, "marco@nudge.local", "due_soon"),
-        (task_id, "marco@nudge.local", "overdue"),
+        (task_id, "jayden@nudge.local", "due_soon"),
+        (task_id, "jayden@nudge.local", "overdue"),
     ]
 
     with models.get_db() as db:
@@ -173,7 +173,7 @@ def test_daily_sweep_dedupes_failed_provider_attempts(app, monkeypatch):
         db.execute("DELETE FROM tasks")
         assignee = db.execute(
             "SELECT id FROM users WHERE email = ?",
-            ("marco@nudge.local",),
+            ("jayden@nudge.local",),
         ).fetchone()
         task_id = _insert_task(
             db,
@@ -190,7 +190,7 @@ def test_daily_sweep_dedupes_failed_provider_attempts(app, monkeypatch):
     assert first["sent"] == 0
     assert first["skipped"] == 1
     assert second["sent"] == 0
-    assert attempts == [(task_id, "marco@nudge.local", "due_soon")]
+    assert attempts == [(task_id, "jayden@nudge.local", "due_soon")]
 
     with models.get_db() as db:
         row = db.execute(

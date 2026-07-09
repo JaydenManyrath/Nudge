@@ -6,7 +6,7 @@ import sockets
 
 
 def test_review_lists_draft_tasks_for_manager(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
 
     response = client.get("/review/")
 
@@ -28,13 +28,13 @@ def test_approving_a_draft_moves_it_to_pending(client, login_as_user, monkeypatc
         "emit",
         lambda event, data, **kwargs: emitted.append((event, data)),
     )
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     task_id = _draft_task_id("Finalize pricing page copy")
 
     response = client.post(
         f"/review/{task_id}/approve",
         data={
-            "owner": "Priya Shah",
+            "owner": "Dat Nguyen",
             "description": "Finalize pricing page copy for launch",
             "due_date": "2026-07-10",
             "priority": "urgent",
@@ -45,7 +45,7 @@ def test_approving_a_draft_moves_it_to_pending(client, login_as_user, monkeypatc
     task = _task(task_id)
     assert task["status"] == "pending"
     assert task["description"] == "Finalize pricing page copy for launch"
-    assert task["assignee_name"] == "Priya Shah"
+    assert task["assignee_name"] == "Dat Nguyen"
     assert task["assignee_id"] is not None
     assert emitted == [
         (
@@ -57,7 +57,7 @@ def test_approving_a_draft_moves_it_to_pending(client, login_as_user, monkeypatc
                 "due_date": "2026-07-10",
                 "due_date_iso": "2026-07-10",
                 "description": "Finalize pricing page copy for launch",
-                "owner": "Priya Shah",
+                "owner": "Dat Nguyen",
             },
         )
     ]
@@ -70,7 +70,7 @@ def test_editing_a_draft_keeps_it_in_review_queue(client, login_as_user, monkeyp
         "emit",
         lambda event, data, **kwargs: emitted.append((event, data)),
     )
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     task_id = _draft_task_id("Investigate flaky checkout test")
 
     response = client.post(
@@ -112,7 +112,7 @@ def test_rejecting_a_draft_retains_rejected_task(client, login_as_user, monkeypa
         "emit",
         lambda event, data, **kwargs: emitted.append((event, data)),
     )
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     task_id = _draft_task_id("Investigate flaky checkout test")
 
     response = client.post(f"/review/{task_id}/reject")
@@ -142,7 +142,7 @@ def test_approving_a_draft_stores_created_calendar_metadata(
     login_as_user,
     monkeypatch,
 ):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     _connect_google_calendar()
     task_id = _draft_task_id("Finalize pricing page copy")
 
@@ -170,7 +170,7 @@ def test_approving_a_draft_stores_created_calendar_metadata(
     response = client.post(
         f"/review/{task_id}/approve",
         data={
-            "owner": "Priya Shah",
+            "owner": "Dat Nguyen",
             "description": "Finalize pricing page copy",
             "due_date": "2026-07-10",
             "priority": "urgent",
@@ -195,7 +195,7 @@ def test_approving_a_draft_stores_failed_calendar_metadata(
     login_as_user,
     monkeypatch,
 ):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     _connect_google_calendar()
     task_id = _draft_task_id("Finalize pricing page copy")
 
@@ -211,7 +211,7 @@ def test_approving_a_draft_stores_failed_calendar_metadata(
     response = client.post(
         f"/review/{task_id}/approve",
         data={
-            "owner": "Priya Shah",
+            "owner": "Dat Nguyen",
             "description": "Finalize pricing page copy",
             "due_date": "2026-07-10",
             "priority": "urgent",
@@ -236,7 +236,7 @@ def test_approving_a_draft_without_due_date_stores_skipped_calendar_metadata(
     client,
     login_as_user,
 ):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     task_id = _draft_task_id("Investigate flaky checkout test")
 
     response = client.post(
@@ -267,7 +267,7 @@ def _connect_google_calendar():
     with models.get_db() as db:
         row = db.execute(
             "SELECT id FROM users WHERE email = ?",
-            ("maya@nudge.local",),
+            ("andrew@nudge.local",),
         ).fetchone()
         models.upsert_oauth_token(
             db,
@@ -298,12 +298,12 @@ def _task(task_id):
 
 
 def test_manager_can_add_task_manually(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     response = client.post(
         "/review/add",
         data={
             "description": "Manually added task",
-            "owner": "marco@nudge.local",
+            "owner": "jayden@nudge.local",
             "priority": "urgent",
         },
         follow_redirects=False,
@@ -314,12 +314,12 @@ def test_manager_can_add_task_manually(client, login_as_user):
 
 
 def test_manual_task_requires_description(client, login_as_user):
-    login_as_user("maya@nudge.local")
+    login_as_user("andrew@nudge.local")
     response = client.post("/review/add", data={"owner": "", "priority": "normal"})
     assert response.status_code == 302  # redirects back with a flash
 
 
 def test_employee_cannot_add_task(client, login_as_user):
-    login_as_user("marco@nudge.local")
+    login_as_user("jayden@nudge.local")
     response = client.post("/review/add", data={"description": "nope"})
     assert response.status_code == 403

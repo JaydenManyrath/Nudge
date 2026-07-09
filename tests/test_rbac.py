@@ -2,7 +2,7 @@ import models
 
 
 def test_employee_cannot_access_manager_routes(client, login_as_user):
-    login_as_user("priya@nudge.local")
+    login_as_user("dat@nudge.local")
 
     response = client.get("/review/")
 
@@ -10,7 +10,7 @@ def test_employee_cannot_access_manager_routes(client, login_as_user):
 
 
 def test_employee_cannot_access_manual_upload_fallback(client, login_as_user):
-    login_as_user("priya@nudge.local")
+    login_as_user("dat@nudge.local")
 
     response = client.get("/upload/")
 
@@ -18,7 +18,7 @@ def test_employee_cannot_access_manual_upload_fallback(client, login_as_user):
 
 
 def test_employee_cannot_access_live_meeting_page(client, login_as_user):
-    login_as_user("priya@nudge.local")
+    login_as_user("dat@nudge.local")
 
     response = client.get("/dashboard/live")
 
@@ -26,7 +26,7 @@ def test_employee_cannot_access_live_meeting_page(client, login_as_user):
 
 
 def test_employee_cannot_post_manager_review_actions(client, login_as_user):
-    login_as_user("priya@nudge.local")
+    login_as_user("dat@nudge.local")
     with models.get_db() as db:
         row = db.execute("SELECT id FROM tasks WHERE status = 'draft' LIMIT 1").fetchone()
 
@@ -39,7 +39,7 @@ def test_employee_cannot_post_manager_review_actions(client, login_as_user):
 
 
 def test_employee_cannot_post_manual_upload_fallback(client, login_as_user):
-    login_as_user("priya@nudge.local")
+    login_as_user("dat@nudge.local")
 
     response = client.post(
         "/upload/",

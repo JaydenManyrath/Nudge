@@ -52,11 +52,11 @@ def test_create_calendar_invite_uses_google_calendar_when_token_exists(
         "summary": "Finalize pricing page copy",
         "description": (
             "Created from a Nudge-approved meeting task.\n\n"
-            "Priya said she would finish pricing copy by Friday."
+            "Dat said he would finish pricing copy by Friday."
         ),
         "start": {"date": "2026-07-10"},
         "end": {"date": "2026-07-11"},
-        "attendees": [{"email": "priya@nudge.local"}],
+        "attendees": [{"email": "dat@nudge.local"}],
     }
 
 
@@ -70,7 +70,7 @@ def _connect_google_calendar():
     with models.get_db() as db:
         row = db.execute(
             "SELECT id FROM users WHERE email = ?",
-            ("maya@nudge.local",),
+            ("andrew@nudge.local",),
         ).fetchone()
         models.upsert_oauth_token(
             db,

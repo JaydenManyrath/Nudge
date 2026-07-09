@@ -223,15 +223,35 @@ def seed_users(db: sqlite3.Connection) -> None:
         os.environ.get("NUDGE_DEMO_PASSWORD", "demo1234")
     )
     users = [
-        ("Maya Chen", "maya@nudge.local", "manager", password_hash),
-        ("Priya Shah", "priya@nudge.local", "employee", password_hash),
-        ("Marco Diaz", "marco@nudge.local", "employee", password_hash),
+        ("Andrew Manoni", "andrew@nudge.local", "manager", password_hash),
+        ("Dat Nguyen", "dat@nudge.local", "employee", password_hash),
+        ("Jayden Manyrath", "jayden@nudge.local", "employee", password_hash),
     ]
+    legacy_seeded_users = [
+        ("maya@nudge.local", "Andrew Manoni", "andrew@nudge.local", "manager"),
+        ("priya@nudge.local", "Dat Nguyen", "dat@nudge.local", "employee"),
+        ("marco@nudge.local", "Jayden Manyrath", "jayden@nudge.local", "employee"),
+    ]
+    for old_email, name, email, role in legacy_seeded_users:
+        db.execute(
+            """
+            UPDATE users
+            SET name = ?, email = ?, role = ?
+            WHERE lower(email) = ?
+              AND NOT EXISTS (
+                  SELECT 1 FROM users existing
+                  WHERE lower(existing.email) = lower(?)
+              )
+            """,
+            (name, email, role, old_email, email),
+        )
     db.executemany(
         """
         INSERT INTO users (name, email, role, password_hash)
         VALUES (?, ?, ?, ?)
         ON CONFLICT(email) DO UPDATE SET
+            name = excluded.name,
+            role = excluded.role,
             password_hash = excluded.password_hash
         """,
         users,
@@ -270,8 +290,8 @@ def seed_demo_tasks(db: sqlite3.Connection) -> None:
             title="Sprint Planning - Jul 6",
             summary="Team reviewed blockers, launch checklist, and assigned follow-ups.",
             transcript=(
-                "Priya will finalize pricing page copy by Friday. "
-                "Marco will create customer rollout notes. "
+                "Dat will finalize pricing page copy by Friday. "
+                "Jayden will create customer rollout notes. "
                 "The checkout test needs an owner."
             ),
             source="manual_upload",
@@ -279,30 +299,30 @@ def seed_demo_tasks(db: sqlite3.Connection) -> None:
         ),
     )
 
-    priya_id = _user_id_by_email(db, "priya@nudge.local")
-    marco_id = _user_id_by_email(db, "marco@nudge.local")
+    dat_id = _user_id_by_email(db, "dat@nudge.local")
+    jayden_id = _user_id_by_email(db, "jayden@nudge.local")
 
     demo_tasks = [
         Task(
             id=None,
             meeting_id=meeting_id,
-            assignee_id=priya_id,
-            assignee_name="Priya",
+            assignee_id=dat_id,
+            assignee_name="Dat",
             description="Finalize pricing page copy",
             due_date="2026-07-10",
             priority="urgent",
-            context="Priya said she would finish pricing copy by Friday.",
+            context="Dat said he would finish pricing copy by Friday.",
             status="draft",
         ),
         Task(
             id=None,
             meeting_id=meeting_id,
-            assignee_id=marco_id,
-            assignee_name="Marco",
+            assignee_id=jayden_id,
+            assignee_name="Jayden",
             description="Create customer rollout notes",
             due_date="2026-07-11",
             priority="normal",
-            context="Marco volunteered to prepare customer rollout notes.",
+            context="Jayden volunteered to prepare customer rollout notes.",
             status="pending",
         ),
         Task(

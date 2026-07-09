@@ -887,36 +887,6 @@ a:hover {
   border-color: var(--warning-border);
 }
 
-/* ---------- Side panel ---------- */
-
-.board-sidepanel {
-  width: 264px;
-  flex-shrink: 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  padding: 16px 18px;
-  box-shadow: var(--shadow-sm);
-}
-
-.board-sidepanel h2 {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-subtle);
-  margin: 16px 0 6px;
-}
-
-.board-sidepanel h2:first-child {
-  margin-top: 0;
-}
-
-.sidepanel-empty {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin: 0;
-}
-
 /* ---------- Review page ---------- */
 
 .review-layout {
@@ -1393,7 +1363,6 @@ a:hover {
     flex-direction: column;
   }
 
-  .board-sidepanel,
   .review-sidebar {
     width: 100%;
   }
