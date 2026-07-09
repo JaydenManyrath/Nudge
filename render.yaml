@@ -11,6 +11,9 @@ services:
         value: "10000"
       - key: SECRET_KEY
         generateValue: true
+      # Public URL of this deployment — used to build OAuth redirect URIs.
+      - key: PUBLIC_BASE_URL
+        value: https://nudge-xp6f.onrender.com
       # Free tier has no persistent disk, so SQLite lives in the ephemeral
       # container filesystem (default ./nudge.db) and re-seeds on each boot.
       - key: NUDGE_SEED_DEMO_DATA
@@ -39,6 +42,8 @@ services:
         sync: false
       - key: ZOOM_SCOPES
         value: meeting:read:meeting_transcript
+      - key: ZOOM_REDIRECT_URI
+        value: https://nudge-xp6f.onrender.com/auth/zoom/callback
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
