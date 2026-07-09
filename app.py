@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask, redirect, url_for
 
 from auth import bp as auth_bp
 from auth import login_manager
@@ -15,6 +15,11 @@ def _is_truthy(value):
 def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
+
+    @app.get("/")
+    def index():
+        # Landing on the bare domain should go to the app, not 404.
+        return redirect(url_for("auth.login"))
 
     @app.get("/healthz")
     def healthz():
