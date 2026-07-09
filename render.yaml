@@ -16,20 +16,21 @@ services:
         value: https://nudge-xp6f.onrender.com
       # Free tier has no persistent disk, so SQLite lives in the ephemeral
       # container filesystem (default ./nudge.db) and re-seeds on each boot.
+      # Login accounts are always seeded; "false" means no sample tasks, so the
+      # board starts empty and you demo the real upload -> extract -> approve flow.
       - key: NUDGE_SEED_DEMO_DATA
-        value: "true"
+        value: "false"
       # One-click "Enter as Manager / Employee" on the login page (no password).
       # Set to "false" to require real sign-in.
       - key: NUDGE_DEMO_MODE
         value: "true"
       - key: DUE_SOON_HOURS
         value: "24"
-      # Keyless by default: the deterministic extractor needs no OpenAI key,
-      # so the app deploys and the full flow works with zero secrets. To use
-      # real OpenAI extraction, set OPENAI_API_KEY below and flip this to
-      # "openai" in the Render dashboard.
+      # Real OpenAI extraction. Requires OPENAI_API_KEY to be set in the Render
+      # dashboard (sync:false below). If extraction errors, the key is missing;
+      # switch this back to "deterministic" for a keyless fallback.
       - key: NUDGE_EXTRACTION_BACKEND
-        value: deterministic
+        value: openai
       - key: OPENAI_EXTRACTION_MODEL
         value: gpt-4o-mini
       - key: OPENAI_API_KEY

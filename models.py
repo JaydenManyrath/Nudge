@@ -201,11 +201,16 @@ def init_db(
         )
         _migrate_schema(db)
 
+        # Always seed the login accounts: there is no self-service signup, so
+        # the app needs accounts to sign in with even in real (non-demo) use.
+        seed_users(db)
+        # The sample meeting + tasks are demo-only, so a real deployment starts
+        # with an empty board.
         if seed_demo_data:
-            seed_demo(db)
+            seed_demo_tasks(db)
 
 
-def seed_demo(db: sqlite3.Connection) -> None:
+def seed_users(db: sqlite3.Connection) -> None:
     from werkzeug.security import generate_password_hash
 
     # The login flow requires a password_hash; without one the seeded users
@@ -228,6 +233,8 @@ def seed_demo(db: sqlite3.Connection) -> None:
         users,
     )
 
+
+def seed_demo_tasks(db: sqlite3.Connection) -> None:
     meeting_id = _ensure_meeting(
         db,
         Meeting(
