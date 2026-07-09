@@ -24,6 +24,21 @@ def mark_done(task_id):
     return jsonify({"task": payload})
 
 
+@bp.route("/tasks/<int:task_id>/reopen", methods=["POST"])
+@login_required
+def reopen(task_id):
+    # Move a completed task back to pending ("mark undone").
+    with get_db() as db:
+        task = _get_accessible_task(db, task_id)
+        if task.status == "done":
+            _update_task_status(db, task.id, "pending")
+            task = _task_by_id(db, task.id)
+            db.commit()
+
+    payload = sockets.emit_task_updated(task)
+    return jsonify({"task": payload})
+
+
 @bp.route("/tasks/<int:task_id>/blockers", methods=["POST"])
 @login_required
 def add_blocker(task_id):

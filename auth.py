@@ -17,7 +17,13 @@ from flask_login import (
 )
 from werkzeug.security import check_password_hash
 
-from models import OAuthToken, get_db, row_to_user, upsert_oauth_token
+from models import (
+    OAuthToken,
+    create_user,
+    get_db,
+    row_to_user,
+    upsert_oauth_token,
+)
 
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
@@ -252,10 +258,12 @@ def login():
             and check_password_hash(user.password_hash, password)
         ):
             login_user(User(user.id, user.name, user.email, user.role))
-            return redirect(
-                _safe_next(request.args.get("next"))
-                or url_for("dashboard.manager_dashboard")
+            default_dest = (
+                url_for("dashboard.manager_dashboard")
+                if user.role == "manager"
+                else url_for("dashboard.employee_dashboard")
             )
+            return redirect(_safe_next(request.args.get("next")) or default_dest)
         return (
             render_template(
                 "login.html",
@@ -273,6 +281,52 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("auth.login"))
+
+
+@bp.route("/signup", methods=["GET", "POST"])
+def signup():
+    # Public self-service registration. New accounts are always employees;
+    # manager accounts are provisioned separately.
+    if request.method == "GET":
+        return render_template("signup.html")
+
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+
+    error = None
+    if not name or not email or not password:
+        error = "Please fill in your name, email, and password."
+    elif len(password) < 6:
+        error = "Password must be at least 6 characters."
+
+    user_id = None
+    if error is None:
+        with get_db() as db:
+            existing = db.execute(
+                "SELECT 1 FROM users WHERE lower(email) = ?", (email,)
+            ).fetchone()
+            if existing:
+                error = "An account with that email already exists."
+            else:
+                user_id = create_user(
+                    db, name=name, email=email, password=password, role="employee"
+                )
+                db.commit()
+
+    if error:
+        return (
+            render_template(
+                "signup.html", signup_error=error, form_name=name, form_email=email
+            ),
+            400,
+        )
+
+    with get_db() as db:
+        row = db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    user = row_to_user(row)
+    login_user(User(user.id, user.name, user.email, user.role))
+    return redirect(url_for("dashboard.employee_dashboard"))
 
 
 @bp.route("/demo/<role>")

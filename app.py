@@ -82,6 +82,49 @@ def create_app():
             500,
         )
 
+    @app.context_processor
+    def inject_notifications():
+        # Feeds the top-bar bell dropdown: the current user's overdue and
+        # due-soon tasks (managers see everyone's, employees see their own).
+        from datetime import date, timedelta
+
+        if not getattr(current_user, "is_authenticated", False):
+            return {"notifications": []}
+
+        items = []
+        try:
+            with get_db() as db:
+                params = ["pending", "blocked"]
+                assignee_filter = ""
+                if getattr(current_user, "role", None) != "manager":
+                    assignee_filter = "AND tasks.assignee_id = ?"
+                    params.append(int(current_user.id))
+                rows = db.execute(
+                    f"""
+                    SELECT description, due_date, assignee_name
+                    FROM tasks
+                    WHERE status IN (?, ?) AND due_date IS NOT NULL {assignee_filter}
+                    ORDER BY due_date ASC
+                    """,
+                    params,
+                ).fetchall()
+
+            today = date.today()
+            soon = today + timedelta(days=2)
+            for row in rows:
+                try:
+                    due = date.fromisoformat(row["due_date"])
+                except (TypeError, ValueError):
+                    continue
+                if due < today:
+                    items.append({"type": "overdue", "text": row["description"], "due": row["due_date"]})
+                elif due <= soon:
+                    items.append({"type": "due_soon", "text": row["description"], "due": row["due_date"]})
+        except Exception:
+            items = []
+
+        return {"notifications": items}
+
     login_manager.init_app(app)
 
     from routes.api import bp as api_bp

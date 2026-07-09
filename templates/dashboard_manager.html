@@ -129,7 +129,8 @@
                     <p class="task-card-context">{{ task.context }}</p>
                     <div class="task-card-actions">
                         <button type="button" class="btn btn-link" data-action="comments" data-task-id="{{ task.id }}">View Comments</button>
-                        <button type="button" class="btn btn-link" data-action="done" data-task-id="{{ task.id }}">Mark Done</button>
+                        <button type="button" class="btn btn-link" data-action="done" data-task-id="{{ task.id }}" data-only-status="pending,blocked">Mark Done</button>
+                        <button type="button" class="btn btn-link" data-action="reopen" data-task-id="{{ task.id }}" data-only-status="done">Reopen</button>
                         <button type="button" class="btn btn-link" data-action="resolve-blocker" data-task-id="{{ task.id }}" data-only-status="blocked">Resolve Blocker</button>
                     </div>
                 </article>

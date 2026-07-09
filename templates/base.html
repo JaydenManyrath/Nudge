@@ -17,17 +17,51 @@
                 </span>
                 <span class="brand-name">Nudge</span>
             </a>
+            {% if current_user and current_user.is_authenticated %}
+            <nav class="topnav-links" aria-label="Primary">
+                {% if current_user.role == 'manager' %}
+                <a class="nav-link {{ 'nav-link-active' if request.endpoint == 'dashboard.manager_dashboard' else '' }}" href="{{ url_for('dashboard.manager_dashboard') }}">Dashboard</a>
+                <a class="nav-link {{ 'nav-link-active' if request.endpoint == 'review.list_drafts' else '' }}" href="{{ url_for('review.list_drafts') }}">Review</a>
+                <a class="nav-link {{ 'nav-link-active' if request.endpoint == 'dashboard.live_meeting' else '' }}" href="{{ url_for('dashboard.live_meeting') }}">Live Meeting</a>
+                {% else %}
+                <a class="nav-link {{ 'nav-link-active' if request.endpoint == 'dashboard.employee_dashboard' else '' }}" href="{{ url_for('dashboard.employee_dashboard') }}">My Tasks</a>
+                {% endif %}
+            </nav>
+            {% else %}
             <span class="crumb">{% block page_title %}{% endblock %}</span>
+            {% endif %}
         </div>
+
         {% if current_user and current_user.is_authenticated %}
         <div class="topnav-actions">
-            <span class="notif-badge" title="Notifications">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
-                <span>{{ notification_count | default(0) }}</span>
-            </span>
+            {% set notes = notifications | default([]) %}
+            <div class="notif" data-notif>
+                <button type="button" class="notif-badge" data-notif-toggle aria-haspopup="true" aria-expanded="false" title="Notifications">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span>{{ notes | length }}</span>
+                </button>
+                <div class="notif-dropdown" data-notif-dropdown hidden>
+                    <div class="notif-dropdown-head">Notifications</div>
+                    {% if notes %}
+                    <ul class="notif-list">
+                        {% for n in notes %}
+                        <li class="notif-item notif-item-{{ n.type }}">
+                            <span class="notif-dot" aria-hidden="true"></span>
+                            <span class="notif-text">
+                                <span class="notif-title">{{ n.text }}</span>
+                                <span class="notif-meta">{{ 'Overdue' if n.type == 'overdue' else 'Due soon' }} &middot; {{ n.due }}</span>
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="notif-empty">You're all caught up.</p>
+                    {% endif %}
+                </div>
+            </div>
             <span class="user-chip">
                 <span class="user-avatar" aria-hidden="true">{{ current_user.name[0] | upper }}</span>
                 <span class="user-meta">
@@ -53,6 +87,30 @@
     <main class="content">
         {% block content %}{% endblock %}
     </main>
+
+    <script>
+    (function () {
+        var wrap = document.querySelector("[data-notif]");
+        if (!wrap) return;
+        var btn = wrap.querySelector("[data-notif-toggle]");
+        var dd = wrap.querySelector("[data-notif-dropdown]");
+        btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var willOpen = dd.hidden;
+            dd.hidden = !willOpen;
+            btn.setAttribute("aria-expanded", String(willOpen));
+        });
+        document.addEventListener("click", function (e) {
+            if (!wrap.contains(e.target)) {
+                dd.hidden = true;
+                btn.setAttribute("aria-expanded", "false");
+            }
+        });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") { dd.hidden = true; btn.setAttribute("aria-expanded", "false"); }
+        });
+    })();
+    </script>
 
     {% block scripts %}{% endblock %}
 </body>

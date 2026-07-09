@@ -117,6 +117,21 @@ def test_employee_can_report_and_manager_can_resolve_blocker(
     assert emitted[-1][0] == "comment_added"
 
 
+def test_reopen_moves_done_task_back_to_pending(client, login_as_user, monkeypatch):
+    monkeypatch.setattr(
+        sockets.socketio, "emit", lambda event, data, **kwargs: None
+    )
+    login_as_user("marco@nudge.local")
+    task_id = _task_id("Create customer rollout notes")
+
+    client.post(f"/api/tasks/{task_id}/done")
+    assert _task(task_id)["status"] == "done"
+
+    response = client.post(f"/api/tasks/{task_id}/reopen")
+    assert response.status_code == 200
+    assert _task(task_id)["status"] == "pending"
+
+
 def _task_id(description):
     with models.get_db() as db:
         row = db.execute(

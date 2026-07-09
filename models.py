@@ -234,6 +234,30 @@ def seed_users(db: sqlite3.Connection) -> None:
     )
 
 
+def create_user(
+    db: sqlite3.Connection,
+    *,
+    name: str,
+    email: str,
+    password: str,
+    role: str = "employee",
+) -> int:
+    """Create a user with a hashed password. Raises sqlite3.IntegrityError if
+    the email is already taken (UNIQUE constraint)."""
+    from werkzeug.security import generate_password_hash
+
+    user = User(id=None, name=name.strip(), email=email.strip().lower(), role=role)
+    validate_user(user)
+    cursor = db.execute(
+        """
+        INSERT INTO users (name, email, role, password_hash)
+        VALUES (?, ?, ?, ?)
+        """,
+        (user.name, user.email, user.role, generate_password_hash(password)),
+    )
+    return int(cursor.lastrowid)
+
+
 def seed_demo_tasks(db: sqlite3.Connection) -> None:
     meeting_id = _ensure_meeting(
         db,

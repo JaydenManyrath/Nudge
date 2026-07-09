@@ -44,6 +44,37 @@
             <p>{{ meeting.summary }}</p>
         </section>
 
+        <form class="draft-card add-task-card" method="post"
+              action="{{ url_for('review.add_task') if url_for is defined else '#' }}">
+            <h2>Add a task manually</h2>
+            <div class="draft-field">
+                <label for="add-description">Task</label>
+                <input id="add-description" name="description" type="text" placeholder="Describe the task" required>
+            </div>
+            <div class="draft-field">
+                <label for="add-owner">Owner</label>
+                <select id="add-owner" name="owner">
+                    <option value="">unassigned</option>
+                    {% for user in users %}
+                    <option value="{{ user.email }}">{{ user.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="add-priority">Priority</label>
+                <select id="add-priority" name="priority">
+                    {% for level in ["low", "normal", "urgent"] %}
+                    <option value="{{ level }}" {% if level == "normal" %}selected{% endif %}>{{ level }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="add-due">Due date</label>
+                <input id="add-due" name="due_date" type="date">
+            </div>
+            <div class="draft-actions">
+                <button type="submit" class="btn btn-primary">Add task</button>
+            </div>
+        </form>
+
         {% for task in draft_tasks %}
         <form class="draft-card" method="post">
             <h2>Draft Task {{ loop.index }}</h2>

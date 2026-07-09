@@ -38,6 +38,57 @@ def list_drafts():
     )
 
 
+@bp.route("/add", methods=["POST"])
+@manager_required
+def add_task():
+    description = request.form.get("description", "").strip()
+    if not description:
+        flash("Task description is required.", "error")
+        return redirect(url_for("review.list_drafts"))
+
+    priority = request.form.get("priority", "normal").strip() or "normal"
+    due_date = request.form.get("due_date", "").strip() or None
+
+    with get_db() as db:
+        assignee_id, assignee_name = _resolve_assignee(
+            db, request.form.get("owner", "").strip()
+        )
+        task = Task(
+            id=None,
+            meeting_id=None,
+            assignee_id=assignee_id,
+            assignee_name=assignee_name,
+            description=description,
+            due_date=due_date,
+            priority=priority,
+            context="Added manually.",
+            status="draft",
+        )
+        _validate_or_abort(task)
+        db.execute(
+            """
+            INSERT INTO tasks (
+                meeting_id, assignee_id, assignee_name, description,
+                due_date, priority, context, status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'draft')
+            """,
+            (
+                task.meeting_id,
+                task.assignee_id,
+                task.assignee_name,
+                task.description,
+                task.due_date,
+                task.priority,
+                task.context,
+            ),
+        )
+        db.commit()
+
+    flash("Draft task added.", "success")
+    return redirect(url_for("review.list_drafts"))
+
+
 @bp.route("/<int:task_id>/approve", methods=["POST"])
 @manager_required
 def approve(task_id):

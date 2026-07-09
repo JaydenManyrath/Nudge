@@ -126,12 +126,19 @@
       target.appendChild(el);
     }
 
-    // toggle the "Resolve Blocker" action to match the new status
-    var resolve = el.querySelector('[data-only-status="blocked"]');
-    if (resolve) resolve.style.display = status === "blocked" ? "" : "none";
-
+    updateCardActions(el);
     renderBadges(el);
     updateCounts();
+  }
+
+  // Show/hide status-specific action buttons (data-only-status is a
+  // comma-separated list of statuses the button is relevant for).
+  function updateCardActions(el) {
+    el.querySelectorAll("[data-only-status]").forEach(function (btn) {
+      var allowed = (btn.getAttribute("data-only-status") || "").split(",");
+      btn.style.display =
+        allowed.indexOf(el.getAttribute("data-status")) !== -1 ? "" : "none";
+    });
   }
 
   // ---- task actions (fetch, optimistic) ----
@@ -158,6 +165,9 @@
     } else if (action === "resolve-blocker") {
       applyStatus(taskId, "pending");
       postJson("/api/tasks/" + taskId + "/blockers/resolve").catch(function () {});
+    } else if (action === "reopen") {
+      applyStatus(taskId, "pending");
+      postJson("/api/tasks/" + taskId + "/reopen").catch(function () {});
     } else if (action === "comments") {
       openDrawer(taskId);
     }
@@ -183,9 +193,13 @@
       applyStatus(taskId, "blocked");
       postJson("/api/tasks/" + taskId + "/blockers", { description: reason }).catch(function () {});
     } else if (target === "pending") {
-      if (current !== "blocked") return; // only blocked -> pending is supported
-      applyStatus(taskId, "pending");
-      postJson("/api/tasks/" + taskId + "/blockers/resolve").catch(function () {});
+      if (current === "blocked") {
+        applyStatus(taskId, "pending");
+        postJson("/api/tasks/" + taskId + "/blockers/resolve").catch(function () {});
+      } else if (current === "done") {
+        applyStatus(taskId, "pending"); // mark undone
+        postJson("/api/tasks/" + taskId + "/reopen").catch(function () {});
+      }
     }
   }
 
@@ -416,11 +430,8 @@
 
   refreshAllBadges();
   updateCounts();
-  // Hide "Resolve Blocker" on non-blocked cards on first paint.
-  document.querySelectorAll('[data-only-status="blocked"]').forEach(function (btn) {
-    var el = btn.closest(".task-card");
-    if (el && el.getAttribute("data-status") !== "blocked") btn.style.display = "none";
-  });
+  // Set status-specific action button visibility on first paint.
+  document.querySelectorAll(".task-card").forEach(updateCardActions);
   enableDrag();
   wireSocket();
 })();

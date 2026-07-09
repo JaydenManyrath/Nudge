@@ -11,9 +11,14 @@ def test_review_lists_draft_tasks_for_manager(client, login_as_user):
     response = client.get("/review/")
 
     assert response.status_code == 200
-    assert b"Finalize pricing page copy" in response.data
-    assert b"Investigate flaky checkout test" in response.data
-    assert b"Create customer rollout notes" not in response.data
+    # Scope the check to the review list (the top-bar notification dropdown
+    # can surface pending tasks by name, which is a separate feature).
+    body = response.get_data(as_text=True)
+    review_main = body.split('class="review-main"', 1)[1].split("review-sidebar", 1)[0]
+    assert "Finalize pricing page copy" in review_main
+    assert "Investigate flaky checkout test" in review_main
+    # A pending (non-draft) task is not listed as an approvable draft.
+    assert "Create customer rollout notes" not in review_main
 
 
 def test_approving_a_draft_moves_it_to_pending(client, login_as_user, monkeypatch):
@@ -290,3 +295,31 @@ def _draft_task_id(description):
 def _task(task_id):
     with models.get_db() as db:
         return db.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+
+
+def test_manager_can_add_task_manually(client, login_as_user):
+    login_as_user("maya@nudge.local")
+    response = client.post(
+        "/review/add",
+        data={
+            "description": "Manually added task",
+            "owner": "marco@nudge.local",
+            "priority": "urgent",
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 302
+    body = client.get("/review/").get_data(as_text=True)
+    assert "Manually added task" in body
+
+
+def test_manual_task_requires_description(client, login_as_user):
+    login_as_user("maya@nudge.local")
+    response = client.post("/review/add", data={"owner": "", "priority": "normal"})
+    assert response.status_code == 302  # redirects back with a flash
+
+
+def test_employee_cannot_add_task(client, login_as_user):
+    login_as_user("marco@nudge.local")
+    response = client.post("/review/add", data={"description": "nope"})
+    assert response.status_code == 403
