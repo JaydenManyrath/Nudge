@@ -15,6 +15,10 @@ services:
       # container filesystem (default ./nudge.db) and re-seeds on each boot.
       - key: NUDGE_SEED_DEMO_DATA
         value: "true"
+      # One-click "Enter as Manager / Employee" on the login page (no password).
+      # Set to "false" to require real sign-in.
+      - key: NUDGE_DEMO_MODE
+        value: "true"
       - key: DUE_SOON_HOURS
         value: "24"
       # Keyless by default: the deterministic extractor needs no OpenAI key,
