@@ -66,7 +66,7 @@ Owner: frontend
 Configured local callback URLs and scopes:
 
 - Zoom callback: `http://localhost:5000/auth/zoom/callback`
-- Zoom scope: `meeting:read:meeting_transcript`
+- Zoom scope: `cloud_recording:read:content`
 - Google callback: `http://localhost:5000/auth/google/callback`
 - Google Calendar scope: `https://www.googleapis.com/auth/calendar.events`
 

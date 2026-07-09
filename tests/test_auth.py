@@ -26,7 +26,7 @@ def test_zoom_oauth_connect_redirects_to_zoom(client, login_as_user, monkeypatch
         "ZOOM_REDIRECT_URI",
         "https://nudge.example.com/auth/zoom/callback",
     )
-    monkeypatch.setenv("ZOOM_SCOPES", "meeting:read:meeting_transcript")
+    monkeypatch.setenv("ZOOM_SCOPES", "cloud_recording:read:content")
 
     response = client.get("/auth/zoom/connect")
 
@@ -38,7 +38,7 @@ def test_zoom_oauth_connect_redirects_to_zoom(client, login_as_user, monkeypatch
     assert query["response_type"] == ["code"]
     assert query["client_id"] == ["zoom-client"]
     assert query["redirect_uri"] == ["https://nudge.example.com/auth/zoom/callback"]
-    assert query["scope"] == ["meeting:read:meeting_transcript"]
+    assert query["scope"] == ["cloud_recording:read:content"]
     assert query["state"][0]
 
     with client.session_transaction() as session:
@@ -49,7 +49,7 @@ def test_zoom_oauth_callback_stores_token(client, login_as_user, monkeypatch):
     login_as_user("maya@nudge.local")
     monkeypatch.setenv("ZOOM_CLIENT_ID", "zoom-client")
     monkeypatch.setenv("ZOOM_CLIENT_SECRET", "zoom-secret")
-    monkeypatch.setenv("ZOOM_SCOPES", "meeting:read:meeting_transcript")
+    monkeypatch.setenv("ZOOM_SCOPES", "cloud_recording:read:content")
     monkeypatch.setattr(
         auth,
         "_exchange_zoom_code",
@@ -57,7 +57,7 @@ def test_zoom_oauth_callback_stores_token(client, login_as_user, monkeypatch):
             "access_token": "zoom-access-token",
             "refresh_token": "zoom-refresh-token",
             "token_type": "bearer",
-            "scope": "meeting:read:meeting_transcript",
+            "scope": "cloud_recording:read:content",
             "expires_in": 3600,
         },
     )
@@ -81,7 +81,7 @@ def test_zoom_oauth_callback_stores_token(client, login_as_user, monkeypatch):
     assert token is not None
     assert token.access_token == "zoom-access-token"
     assert token.refresh_token == "zoom-refresh-token"
-    assert token.scope == "meeting:read:meeting_transcript"
+    assert token.scope == "cloud_recording:read:content"
     assert token.expires_at is not None
 
 

@@ -32,7 +32,7 @@ bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 ZOOM_AUTHORIZE_URL = "https://zoom.us/oauth/authorize"
 ZOOM_TOKEN_URL = "https://zoom.us/oauth/token"
-DEFAULT_ZOOM_SCOPES = "meeting:read:meeting_transcript"
+DEFAULT_ZOOM_SCOPES = "cloud_recording:read:content"
 GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 DEFAULT_GOOGLE_CALENDAR_SCOPES = "https://www.googleapis.com/auth/calendar.events"

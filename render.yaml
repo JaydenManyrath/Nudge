@@ -42,7 +42,7 @@ services:
       - key: ZOOM_SECRET_TOKEN
         sync: false
       - key: ZOOM_SCOPES
-        value: meeting:read:meeting_transcript
+        value: cloud_recording:read:content
       - key: ZOOM_REDIRECT_URI
         value: https://nudge-xp6f.onrender.com/auth/zoom/callback
       - key: GOOGLE_CLIENT_ID
