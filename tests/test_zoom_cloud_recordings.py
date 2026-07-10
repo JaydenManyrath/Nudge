@@ -6,6 +6,7 @@ import routes.dashboard as dashboard
 from backend.ingestion.zoom_recordings import (
     ZoomNoTranscriptError,
     ZoomPermissionError,
+    ZoomRecordingError,
     ZoomTokenRefreshError,
     ZoomTranscript,
     normalize_vtt,
@@ -211,6 +212,28 @@ def test_live_meeting_shows_no_transcript(client, login_as_user, monkeypatch):
 
     assert response.status_code == 200
     assert b"No Zoom cloud recording transcript was found." in response.data
+
+
+def test_live_meeting_suppresses_generic_zoom_recording_error(
+    client,
+    login_as_user,
+    monkeypatch,
+):
+    login_as_user("andrew@nudge.local")
+    _store_zoom_token()
+    monkeypatch.setattr(
+        dashboard,
+        "latest_transcript_for_user",
+        lambda db, token: (_ for _ in ()).throw(
+            ZoomRecordingError("provider unavailable")
+        ),
+    )
+
+    response = client.get("/dashboard/live")
+
+    assert response.status_code == 200
+    assert b"Zoom cloud recording transcripts could not be loaded." not in response.data
+    assert b"Andrew: Before we wrap, Jayden" in response.data
 
 
 def test_live_meeting_does_not_stage_large_transcript(

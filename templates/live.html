@@ -60,6 +60,12 @@
             {% elif zoom_transcript_too_large %}
             <button type="button" class="btn btn-primary" disabled>Import to Review</button>
             <span class="upload-hint upload-hint-error">Transcript is larger than {{ zoom_transcript_max_kb }} KB. Use manual upload.</span>
+            {% elif live_transcript_text %}
+            <form method="post" action="{{ url_for('upload.upload_transcript') if url_for is defined else '#' }}">
+                <input type="hidden" name="title" value="Live Meeting Transcript">
+                <textarea name="transcript_text" hidden>{{ live_transcript_text }}</textarea>
+                <button type="submit" class="btn btn-primary">Extract Tasks</button>
+            </form>
             {% elif zoom_connected %}
             <a class="btn" href="{{ url_for('auth.zoom_connect') if url_for is defined else '#' }}">Reconnect Zoom</a>
             {% else %}

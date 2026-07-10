@@ -90,7 +90,7 @@ def live_meeting():
             except ZoomNoTranscriptError as exc:
                 zoom_error = str(exc)
             except ZoomRecordingError:
-                zoom_error = "Zoom cloud recording transcripts could not be loaded."
+                zoom_error = None
 
     staged_transcript = None
     if zoom_transcript is not None:
