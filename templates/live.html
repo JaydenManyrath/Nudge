@@ -9,6 +9,8 @@
 {% set zoom_error = zoom_error | default(none) %}
 {% set zoom_transcript_too_large = zoom_transcript_too_large | default(false) %}
 {% set zoom_transcript_max_kb = zoom_transcript_max_kb | default(50) %}
+{% set demo_live_transcript = demo_live_transcript | default(none) %}
+{% set live_transcript_text = zoom_transcript.transcript_text if zoom_transcript else demo_live_transcript %}
 {% set upload_error = upload_error | default(none) %}
 
 {% if not zoom_connected %}
@@ -39,8 +41,8 @@
         </div>
         {% endif %}
         <div id="transcript" class="transcript" aria-live="polite">
-            {% if zoom_transcript %}
-            {% for line in zoom_transcript.transcript_text.splitlines() %}
+            {% if live_transcript_text %}
+            {% for line in live_transcript_text.splitlines() %}
             <p class="transcript-line">{{ line }}</p>
             {% endfor %}
             {% elif zoom_connected %}

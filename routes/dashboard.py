@@ -21,6 +21,12 @@ ACTIVE_STATUSES = ("pending", "blocked", "done")
 ZOOM_TRANSCRIPT_SESSION_KEY = "zoom_cloud_recording_transcript"
 ZOOM_TRANSCRIPT_MAX_BYTES = 50 * 1024
 ZOOM_TRANSCRIPT_SESSION_TTL = timedelta(minutes=30)
+DEMO_LIVE_TRANSCRIPT = """Andrew: Before we wrap, Jayden, can you finish the extraction fallback logic by Friday?
+Jayden: Yeah, I'll have that wrapped up by Friday.
+Andrew: Dat, can you take a pass at the calendar invite bug? No rush, whenever you get a chance.
+Dat: Sure, I'll look into it when I get some time.
+Andrew: Also, someone still needs to update the demo script before we present. Make sure you also finish the presentation by Saturday Jayden. Dat you can fix the backend errors by tomorrow.
+Andrew: Alright, that's everything. Good work this sprint. Make sure you guys quit being chuds and lock in today."""
 
 
 @bp.route("/manager")
@@ -103,6 +109,7 @@ def live_meeting():
         zoom_error=zoom_error,
         zoom_transcript_too_large=transcript_too_large,
         zoom_transcript_max_kb=ZOOM_TRANSCRIPT_MAX_BYTES // 1024,
+        demo_live_transcript=DEMO_LIVE_TRANSCRIPT,
     )
 
 

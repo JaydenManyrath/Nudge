@@ -90,6 +90,8 @@ def test_manager_can_access_live_meeting_page(client, login_as_user):
     assert response.status_code == 200
     assert b"Live Meeting" in response.data
     assert b"Live Transcript" in response.data
+    assert b"Andrew: Before we wrap, Jayden" in response.data
+    assert b"Dat you can fix the backend errors by tomorrow." in response.data
 
 
 def test_live_meeting_page_shows_zoom_disconnected_by_default(client, login_as_user):
